@@ -85,48 +85,40 @@ export function useAppState() {
   }, []);
 
   const generate = useCallback(async () => {
-    if (!selectedCountry || !selectedStyle || !uploadedImageUrl) return;
+    if (!selectedCountry || !selectedStyle || !uploadedFile) return;
 
     setIsGenerating(true);
     setGenerationProgress(0);
     setPhase('generating');
     setError(null);
 
-    // ── Canvas composite path ──────────────────────────────────────────────
     const adminTemplate = getAdminTemplateById(selectedStyle.id);
 
-    if (adminTemplate) {
-      if (!adminTemplate.faceBox) {
-        setError('관리자가 아직 이 템플릿의 얼굴 위치를 설정하지 않았습니다.');
-        setPhase('style_selected');
-        setIsGenerating(false);
-        return;
-      }
-
+    // ── AI generation path (prompt 있을 때) ───────────────────────────────
+    if (adminTemplate?.prompt) {
       try {
-        // Simulate progress while compositing runs
-        const progressSteps = [15, 40, 65, 85, 95];
-        for (const step of progressSteps) {
-          await new Promise<void>((res) => setTimeout(res, 120));
-          setGenerationProgress(step);
-        }
+        // 진행 애니메이션 (AI 생성은 30~60초 소요)
+        let prog = 0;
+        const timer = setInterval(() => {
+          prog = Math.min(prog + 1.5, 88);
+          setGenerationProgress(Math.round(prog));
+        }, 600);
 
-        const dataUrl = await compositeImage(
-          adminTemplate.url,
-          uploadedImageUrl,
-          adminTemplate.faceBox,
-          adminTemplate.brightness,
-        );
+        const form = new FormData();
+        form.append('file', uploadedFile);
+        form.append('prompt', adminTemplate.prompt);
+
+        const res = await fetch('/api/generate', { method: 'POST', body: form });
+        clearInterval(timer);
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? 'AI 생성 실패');
 
         setGenerationProgress(100);
-        setResultImageUrl(dataUrl);
+        setResultImageUrl(data.resultUrl);
         setPhase('result');
       } catch (e) {
-        setError(
-          e instanceof Error
-            ? e.message
-            : '이미지 합성 중 오류가 발생했습니다. 다시 시도해주세요.',
-        );
+        setError(e instanceof Error ? e.message : 'AI 생성 중 오류가 발생했습니다.');
         setPhase('style_selected');
       } finally {
         setIsGenerating(false);
@@ -134,13 +126,40 @@ export function useAppState() {
       return;
     }
 
-    // ── AI generation fallback path ────────────────────────────────────────
-    if (!uploadedFile) {
-      setError('관리자가 아직 이 나라의 템플릿을 설정하지 않았습니다.');
+    // ── Canvas composite path (prompt 없고 faceBox 있을 때) ──────────────
+    if (adminTemplate?.faceBox && uploadedImageUrl) {
+      try {
+        const progressSteps = [15, 40, 65, 85, 95];
+        for (const step of progressSteps) {
+          await new Promise<void>((res) => setTimeout(res, 120));
+          setGenerationProgress(step);
+        }
+        const dataUrl = await compositeImage(
+          adminTemplate.url,
+          uploadedImageUrl,
+          adminTemplate.faceBox,
+          adminTemplate.brightness,
+        );
+        setGenerationProgress(100);
+        setResultImageUrl(dataUrl);
+        setPhase('result');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '이미지 합성 중 오류가 발생했습니다.');
+        setPhase('style_selected');
+      } finally {
+        setIsGenerating(false);
+      }
+      return;
+    }
+
+    if (adminTemplate && !adminTemplate.prompt && !adminTemplate.faceBox) {
+      setError('관리자가 아직 이 템플릿의 프롬프트 또는 얼굴 위치를 설정하지 않았습니다.');
       setPhase('style_selected');
       setIsGenerating(false);
       return;
     }
+
+    // ── 레거시 mock fallback ──────────────────────────────────────────────
 
     try {
       const { jobId } = await api.generateImage(

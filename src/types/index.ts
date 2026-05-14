@@ -77,6 +77,7 @@ export type AdminTemplate = {
   url: string;           // Vercel Blob public URL
   brightness: number;    // 50-150, default 100
   faceBox: FaceBox | null;
+  prompt: string;        // AI generation prompt
 };
 
 export type AdminCountryConfig = {

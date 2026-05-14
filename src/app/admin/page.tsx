@@ -185,6 +185,7 @@ type TemplateCardProps = {
   template: AdminTemplate;
   onTitleChange: (val: string) => void;
   onBrightnessChange: (val: number) => void;
+  onPromptChange: (val: string) => void;
   onSetFaceBox: () => void;
   onDelete: () => void;
 };
@@ -193,6 +194,7 @@ function TemplateCard({
   template,
   onTitleChange,
   onBrightnessChange,
+  onPromptChange,
   onSetFaceBox,
   onDelete,
 }: TemplateCardProps) {
@@ -266,6 +268,23 @@ function TemplateCard({
             <span>100%</span>
             <span>150%</span>
           </div>
+        </div>
+
+        {/* AI Prompt */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-gray-500">AI 생성 프롬프트</label>
+            {template.prompt && (
+              <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">AI 사용</span>
+            )}
+          </div>
+          <textarea
+            value={template.prompt}
+            onChange={(e) => onPromptChange(e.target.value)}
+            rows={6}
+            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-y font-mono leading-relaxed"
+            placeholder={`AI 이미지 생성 프롬프트를 입력하세요.\n프롬프트가 있으면 사용자 사진을 AI로 변환합니다.\n없으면 캔버스 합성 방식을 사용합니다.`}
+          />
         </div>
 
         {/* URL (read-only, truncated) */}
@@ -388,6 +407,7 @@ export default function AdminPage() {
         url,
         brightness: 100,
         faceBox: null,
+        prompt: '',
       };
 
       setConfig((prev) => ({
@@ -678,6 +698,9 @@ export default function AdminPage() {
                   }
                   onBrightnessChange={(val) =>
                     updateTemplate(activeCountry, template.id, { brightness: val })
+                  }
+                  onPromptChange={(val) =>
+                    updateTemplate(activeCountry, template.id, { prompt: val })
                   }
                   onSetFaceBox={() =>
                     setEditingFaceBox({ templateId: template.id, countrySlug: activeCountry })
