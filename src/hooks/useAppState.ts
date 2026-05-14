@@ -111,11 +111,17 @@ export function useAppState() {
         const res = await fetch('/api/generate', { method: 'POST', body: form });
         clearInterval(timer);
 
-        const data = await res.json();
+        let data: { error?: string; resultUrl?: string } = {};
+        try {
+          data = await res.json();
+        } catch {
+          const text = await res.text().catch(() => '');
+          throw new Error(`서버 응답 오류 (${res.status}): ${text.slice(0, 120)}`);
+        }
         if (!res.ok) throw new Error(data.error ?? 'AI 생성 실패');
 
         setGenerationProgress(100);
-        setResultImageUrl(data.resultUrl);
+        setResultImageUrl(data.resultUrl ?? null);
         setPhase('result');
       } catch (e) {
         setError(e instanceof Error ? e.message : 'AI 생성 중 오류가 발생했습니다.');

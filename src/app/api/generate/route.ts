@@ -20,8 +20,10 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    // gpt-image-2 expects PNG
-    const imageFile = await toFile(buffer, 'image.png', { type: 'image/png' });
+    // Use actual file type; fall back to jpeg for photos
+    const mimeType = file.type || 'image/jpeg';
+    const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
+    const imageFile = await toFile(buffer, `image.${ext}`, { type: mimeType });
 
     const response = await openai.images.edit({
       model: 'gpt-image-2',
