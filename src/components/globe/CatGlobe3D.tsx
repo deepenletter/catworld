@@ -23,31 +23,56 @@ function easeInOutCubic(t: number) {
 
 // ─── Earth ────────────────────────────────────────────────────────────────────
 
+function CloudLayer() {
+  const cloudRef = useRef<THREE.Mesh>(null);
+  const cloudTexture = useTexture('/earth_clouds.png');
+
+  useFrame((_, delta) => {
+    if (cloudRef.current) {
+      cloudRef.current.rotation.y += delta * 0.018;
+    }
+  });
+
+  return (
+    <mesh ref={cloudRef} scale={1.012}>
+      <sphereGeometry args={[1, 64, 64]} />
+      <meshPhongMaterial
+        map={cloudTexture}
+        alphaMap={cloudTexture}
+        transparent
+        opacity={0.9}
+        depthWrite={false}
+        side={THREE.FrontSide}
+      />
+    </mesh>
+  );
+}
+
 function EarthGlobe() {
-  const earthTexture = useTexture('/earth.jpg');
+  const [dayMap, normalMap, specularMap] = useTexture([
+    '/earth_day.jpg',
+    '/earth_normal.jpg',
+    '/earth_specular.jpg',
+  ]);
 
   return (
     <>
-      {/* Earth sphere */}
+      {/* Earth surface */}
       <mesh>
-        <sphereGeometry args={[1, 96, 96]} />
-        <meshStandardMaterial
-          map={earthTexture}
-          roughness={0.8}
-          metalness={0}
+        <sphereGeometry args={[1, 128, 128]} />
+        <meshPhongMaterial
+          map={dayMap}
+          normalMap={normalMap}
+          specularMap={specularMap}
+          specular={new THREE.Color(0.35, 0.45, 0.65)}
+          shininess={22}
+          normalScale={new THREE.Vector2(0.55, 0.55)}
         />
       </mesh>
-      {/* Thin atmospheric edge glow */}
-      <mesh scale={1.018}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshBasicMaterial
-          color={new THREE.Color(0.15, 0.45, 1.0)}
-          side={THREE.BackSide}
-          transparent
-          opacity={0.14}
-          depthWrite={false}
-        />
-      </mesh>
+      {/* Cloud layer */}
+      <Suspense fallback={null}>
+        <CloudLayer />
+      </Suspense>
     </>
   );
 }
@@ -316,9 +341,9 @@ function Scene({
 }) {
   return (
     <>
-      <ambientLight intensity={0.55} color={new THREE.Color(0.82, 0.92, 1.0)} />
-      <directionalLight position={[4, 2, 4]} intensity={1.0} color={new THREE.Color(1, 0.97, 0.90)} />
-      <directionalLight position={[-3, -1, -2]} intensity={0.3} color={new THREE.Color(0.5, 0.7, 1.0)} />
+      <ambientLight intensity={0.6} color={new THREE.Color(0.8, 0.88, 1.0)} />
+      <directionalLight position={[5, 3, 4]} intensity={2.4} color={new THREE.Color(1, 0.97, 0.88)} />
+      <directionalLight position={[-5, -2, -4]} intensity={0.25} color={new THREE.Color(0.4, 0.6, 1.0)} />
 
       <TwinklingStars />
 
