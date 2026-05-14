@@ -71,6 +71,8 @@ export type FaceBox = {
   hRatio: number;   // 0-1 fraction of image height
 };
 
+export type TemplateGenerationMode = 'composite' | 'ai';
+
 export type AdminTemplate = {
   id: string;
   title: string;
@@ -78,6 +80,7 @@ export type AdminTemplate = {
   brightness: number;    // 50-150, default 100
   faceBox: FaceBox | null;
   prompt: string;        // AI generation prompt
+  generationMode?: TemplateGenerationMode;
 };
 
 export type AdminCountryConfig = {

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import type { Country, StyleCard, AppPhase } from '@/types';
+import { useCallback, useRef, useState } from 'react';
+import type { AppPhase, Country, StyleCard } from '@/types';
 import { api } from '@/lib/api';
+import { getTemplateGenerationMode } from '@/lib/adminConfig';
 import { compositeImage } from '@/lib/imageComposite';
+import { createFaceSwapMaskData } from '@/lib/faceSwap';
 import { getAdminTemplateById } from '@/lib/templateStore';
 
 export type AppStateValues = {
@@ -93,66 +95,35 @@ export function useAppState() {
     setError(null);
 
     const adminTemplate = getAdminTemplateById(selectedStyle.id);
+    const generationMode = adminTemplate ? getTemplateGenerationMode(adminTemplate) : null;
 
-    // ── AI generation path (prompt 있을 때) ───────────────────────────────
-    if (adminTemplate?.prompt) {
-      try {
-        // 진행 애니메이션 (AI 생성은 30~60초 소요)
-        let prog = 0;
-        const timer = setInterval(() => {
-          prog = Math.min(prog + 1.5, 88);
-          setGenerationProgress(Math.round(prog));
-        }, 600);
-
-        const form = new FormData();
-        form.append('file', uploadedFile);
-        form.append('prompt', adminTemplate.prompt);
-
-        const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
-        const generateUrl = base ? `${base}/generate` : '/api/generate';
-        const res = await fetch(generateUrl, { method: 'POST', body: form });
-        clearInterval(timer);
-
-        let data: { error?: string; resultUrl?: string } = {};
-        try {
-          data = await res.json();
-        } catch {
-          const text = await res.text().catch(() => '');
-          throw new Error(`서버 응답 오류 (${res.status}): ${text.slice(0, 120)}`);
-        }
-        if (!res.ok) throw new Error(data.error ?? 'AI 생성 실패');
-
-        setGenerationProgress(100);
-        setResultImageUrl(data.resultUrl ?? null);
-        setPhase('result');
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'AI 생성 중 오류가 발생했습니다.');
+    if (adminTemplate && generationMode === 'composite') {
+      if (!adminTemplate.faceBox || !uploadedImageUrl) {
+        setError('관리자 템플릿에 얼굴 영역이 아직 설정되지 않았습니다.');
         setPhase('style_selected');
-      } finally {
         setIsGenerating(false);
+        return;
       }
-      return;
-    }
 
-    // ── Canvas composite path (prompt 없고 faceBox 있을 때) ──────────────
-    if (adminTemplate?.faceBox && uploadedImageUrl) {
       try {
         const progressSteps = [15, 40, 65, 85, 95];
         for (const step of progressSteps) {
-          await new Promise<void>((res) => setTimeout(res, 120));
+          await new Promise<void>((resolve) => setTimeout(resolve, 120));
           setGenerationProgress(step);
         }
+
         const dataUrl = await compositeImage(
           adminTemplate.url,
           uploadedImageUrl,
           adminTemplate.faceBox,
           adminTemplate.brightness,
         );
+
         setGenerationProgress(100);
         setResultImageUrl(dataUrl);
         setPhase('result');
-      } catch (e) {
-        setError(e instanceof Error ? e.message : '이미지 합성 중 오류가 발생했습니다.');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '이미지 합성 중 오류가 발생했습니다.');
         setPhase('style_selected');
       } finally {
         setIsGenerating(false);
@@ -160,14 +131,68 @@ export function useAppState() {
       return;
     }
 
-    if (adminTemplate && !adminTemplate.prompt && !adminTemplate.faceBox) {
-      setError('관리자가 아직 이 템플릿의 프롬프트 또는 얼굴 위치를 설정하지 않았습니다.');
-      setPhase('style_selected');
-      setIsGenerating(false);
+    if (adminTemplate && generationMode === 'ai') {
+      if (!adminTemplate.prompt.trim()) {
+        setError('AI 얼굴 편집에는 프롬프트가 필요합니다.');
+        setPhase('style_selected');
+        setIsGenerating(false);
+        return;
+      }
+
+      if (!adminTemplate.faceBox) {
+        setError('AI 얼굴 편집에는 템플릿 얼굴 영역 설정이 필요합니다.');
+        setPhase('style_selected');
+        setIsGenerating(false);
+        return;
+      }
+
+      try {
+        let progress = 0;
+        const timer = setInterval(() => {
+          progress = Math.min(progress + 1.5, 88);
+          setGenerationProgress(Math.round(progress));
+        }, 600);
+
+        const { maskDataUrl, size } = await createFaceSwapMaskData(
+          adminTemplate.url,
+          adminTemplate.faceBox,
+        );
+
+        const form = new FormData();
+        form.append('file', uploadedFile);
+        form.append('prompt', adminTemplate.prompt);
+        form.append('templateUrl', adminTemplate.url);
+        form.append('maskDataUrl', maskDataUrl);
+        form.append('size', size);
+
+        const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
+        const generateUrl = base ? `${base}/generate` : '/api/generate';
+        const response = await fetch(generateUrl, { method: 'POST', body: form });
+        clearInterval(timer);
+
+        let data: { error?: string; resultUrl?: string } = {};
+        try {
+          data = await response.json();
+        } catch {
+          const text = await response.text().catch(() => '');
+          throw new Error(`서버 응답을 읽지 못했습니다. (${response.status}) ${text.slice(0, 120)}`);
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error ?? 'AI 얼굴 편집 요청이 실패했습니다.');
+        }
+
+        setGenerationProgress(100);
+        setResultImageUrl(data.resultUrl ?? null);
+        setPhase('result');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'AI 얼굴 편집 중 오류가 발생했습니다.');
+        setPhase('style_selected');
+      } finally {
+        setIsGenerating(false);
+      }
       return;
     }
-
-    // ── 레거시 mock fallback ──────────────────────────────────────────────
 
     try {
       const { jobId } = await api.generateImage(
@@ -191,21 +216,23 @@ export function useAppState() {
               clearInterval(pollIntervalRef.current!);
               reject(new Error(job.error ?? '생성에 실패했습니다.'));
             }
-          } catch (e) {
+          } catch (err) {
             clearInterval(pollIntervalRef.current!);
-            reject(e);
+            reject(err);
           }
         }, 800);
       });
-    } catch (e) {
+    } catch (err) {
       setError(
-        e instanceof Error ? e.message : '생성 중 오류가 발생했습니다. 다시 시도해주세요.',
+        err instanceof Error
+          ? err.message
+          : '생성 중 오류가 발생했습니다. 다시 시도해주세요.',
       );
       setPhase('style_selected');
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedCountry, selectedStyle, uploadedImageUrl, uploadedFile]);
+  }, [selectedCountry, selectedStyle, uploadedFile, uploadedImageUrl]);
 
   const retryStyle = useCallback(() => {
     setResultImageUrl(null);

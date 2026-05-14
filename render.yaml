@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: catworld-web
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_IMAGE_MODEL
+        value: gpt-image-2
+      - key: NEXT_PUBLIC_GENERATE_API_URL
+        sync: false

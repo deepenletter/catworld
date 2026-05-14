@@ -3,8 +3,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
-import type { Country, StyleCard as StyleCardType, AdminCountryConfig, AdminTemplate } from '@/types';
+import type {
+  AdminCountryConfig,
+  AdminTemplate,
+  Country,
+  StyleCard as StyleCardType,
+} from '@/types';
 import { StyleCard } from '@/components/cards/StyleCard';
+import { getTemplateGenerationMode, normalizeAdminConfig } from '@/lib/adminConfig';
 import { setAdminTemplates } from '@/lib/templateStore';
 
 type Props = {
@@ -14,16 +20,21 @@ type Props = {
   onBack: () => void;
 };
 
-function adminTemplateToStyleCard(t: AdminTemplate): StyleCardType {
+function adminTemplateToStyleCard(template: AdminTemplate): StyleCardType {
+  const generationMode = getTemplateGenerationMode(template);
+  const isComposite = generationMode === 'composite';
+
   return {
-    id: t.id,
-    title: t.title,
-    description: `밝기: ${t.brightness}%`,
-    gradient: 'from-slate-800 to-slate-900',
-    accentColor: '#888888',
-    emoji: '🌍',
-    tags: [],
-    image: t.url,
+    id: template.id,
+    title: template.title,
+    description: isComposite
+      ? '얼굴 합성 템플릿'
+      : 'AI 편집 템플릿',
+    gradient: isComposite ? 'from-slate-800 to-slate-900' : 'from-purple-700 to-fuchsia-500',
+    accentColor: isComposite ? '#475569' : '#9333EA',
+    emoji: isComposite ? '😺' : '✨',
+    tags: isComposite ? ['템플릿', '얼굴합성'] : ['AI', '편집'],
+    image: template.url,
     promptTemplate: '',
     identityLockInstruction: '',
     styleStrength: 0.7,
@@ -38,28 +49,33 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
   useEffect(() => {
     let cancelled = false;
     setConfigLoading(true);
+
     fetch('/api/admin/config')
       .then((res) => (res.ok ? res.json() : {}))
-      .then((data: AdminCountryConfig) => {
+      .then((data) => {
         if (cancelled) return;
-        setAdminConfig(data);
-        // Register all templates into the store so compositing can look them up
-        const allTemplates = Object.values(data).flat();
-        setAdminTemplates(allTemplates);
+
+        const normalized = normalizeAdminConfig(data);
+        setAdminConfig(normalized);
+        setAdminTemplates(Object.values(normalized).flat());
       })
       .catch(() => {
-        if (!cancelled) setAdminConfig({});
+        if (!cancelled) {
+          setAdminConfig({});
+          setAdminTemplates([]);
+        }
       })
       .finally(() => {
         if (!cancelled) setConfigLoading(false);
       });
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const adminTemplates: AdminTemplate[] = adminConfig?.[country.slug] ?? [];
   const hasAdminTemplates = adminTemplates.length > 0;
-
-  // Determine which style cards to show
   const styleCards: StyleCardType[] = hasAdminTemplates
     ? adminTemplates.map(adminTemplateToStyleCard)
     : country.styles;
@@ -70,8 +86,6 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
       style={{ background: 'linear-gradient(160deg, #FFFDE7 0%, #FFF9C4 45%, #FFFBCC 100%)' }}
     >
       <div className="max-w-5xl mx-auto">
-
-        {/* 뒤로가기 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -86,7 +100,6 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
           </button>
         </motion.div>
 
-        {/* 나라 헤더 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -94,12 +107,11 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
           className="mb-10"
         >
           <div className="flex items-center gap-4 mb-3">
-            {/* 국기 이미지 */}
             <div className="relative flex-shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://flagcdn.com/w80/${country.code}.png`}
-                alt={`${country.name} 국기`}
+                alt={`${country.name} flag`}
                 className="rounded-lg object-cover shadow-md"
                 style={{ height: 52, width: 'auto', minWidth: 72 }}
               />
@@ -116,41 +128,38 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
 
           <p className="text-warm-700 text-base mt-5 font-medium">
             {configLoading
-              ? '스타일을 불러오는 중...'
+              ? '관리자 템플릿을 불러오는 중입니다.'
               : hasAdminTemplates
-              ? `${adminTemplates.length}가지 템플릿 중 하나를 선택하면, 내 고양이 사진이 합성됩니다.`
-              : '4가지 스타일 중 하나를 선택하면, 내 고양이가 그 감성으로 변신합니다.'}
+              ? `${adminTemplates.length}개의 관리자 템플릿 중 하나를 선택해 주세요.`
+              : '기본 스타일 카드 중 하나를 선택해 주세요.'}
           </p>
         </motion.div>
 
-        {/* Loading skeleton */}
         {configLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3].map((index) => (
               <div
-                key={i}
+                key={index}
                 className="h-40 rounded-2xl bg-gray-200 animate-pulse"
               />
             ))}
           </div>
         )}
 
-        {/* Style / template grid */}
         {!configLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {styleCards.map((style, i) => (
+            {styleCards.map((style, index) => (
               <StyleCard
                 key={style.id}
                 style={style}
                 isSelected={selectedStyle?.id === style.id}
                 onSelect={onStyleSelect}
-                index={i}
+                index={index}
               />
             ))}
           </div>
         )}
 
-        {/* No templates warning (admin templates exist but none for this country) */}
         {!configLoading && adminConfig !== null && Object.keys(adminConfig).length > 0 && !hasAdminTemplates && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -164,12 +173,11 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
           >
             <span className="text-xl">⚠️</span>
             <p className="text-red-700 text-sm leading-relaxed">
-              관리자가 아직 이 나라의 템플릿을 설정하지 않았습니다. 스타일을 선택하면 기본 카드가 표시됩니다.
+              이 나라는 아직 관리자 템플릿이 없습니다. 기본 카드 목록으로 보여드리고 있습니다.
             </p>
           </motion.div>
         )}
 
-        {/* 얼굴 보존 안내 */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -180,21 +188,11 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
             borderColor: 'rgba(245,197,24,0.4)',
           }}
         >
-          <span className="text-xl">🐱</span>
+          <span className="text-xl">💡</span>
           <p className="text-warm-700 text-sm leading-relaxed">
-            {hasAdminTemplates ? (
-              <>
-                <strong className="text-warm-900">캔버스 합성 기술</strong>
-                &nbsp;— 업로드한 고양이 사진을 템플릿 이미지에 자연스럽게 합성합니다.
-                얼굴 영역이 설정된 템플릿에서 더 정확한 결과를 얻을 수 있습니다.
-              </>
-            ) : (
-              <>
-                <strong className="text-warm-900">얼굴 정체성 보존 기술</strong>
-                &nbsp;— 털 색, 눈 색, 얼굴형 등 고양이 고유의 특징은 최대한 유지됩니다.
-                스타일 요소(배경·의상·소품·조명)만 바뀝니다.
-              </>
-            )}
+            {hasAdminTemplates
+              ? '관리자 템플릿이 있으면 선택한 템플릿 방식으로 바로 결과를 만듭니다. 얼굴 합성 모드는 빠르고 배포도 간단합니다.'
+              : '관리자 템플릿이 없으면 기존 스타일 카드 흐름을 사용합니다.'}
           </p>
         </motion.div>
       </div>
