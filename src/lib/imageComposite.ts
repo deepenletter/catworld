@@ -3,10 +3,11 @@ import type { FaceBox } from '@/types';
 function loadCorsImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    const isExternal = url.startsWith('http://') || url.startsWith('https://');
+    if (isExternal) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    img.onerror = () => reject(new Error(`이미지 로드 실패: ${isExternal ? url.slice(0, 80) : url.slice(0, 30)}`));
+    img.src = isExternal ? url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now() : url;
   });
 }
 

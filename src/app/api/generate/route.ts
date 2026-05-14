@@ -20,19 +20,23 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageFile = await toFile(buffer, 'cat.png', { type: 'image/png' });
+    // gpt-image-2 expects PNG
+    const imageFile = await toFile(buffer, 'image.png', { type: 'image/png' });
 
     const response = await openai.images.edit({
       model: 'gpt-image-2',
       image: imageFile,
       prompt,
       n: 1,
-      size: '1024x1536',
+      size: '1024x1024',
       quality: 'high',
     });
 
     const b64 = response.data?.[0]?.b64_json;
-    if (!b64) throw new Error('AI로부터 이미지를 받지 못했습니다.');
+    if (!b64) {
+      console.error('[generate] 응답 구조:', JSON.stringify(response).slice(0, 300));
+      throw new Error('AI로부터 이미지를 받지 못했습니다.');
+    }
 
     return NextResponse.json({ resultUrl: `data:image/png;base64,${b64}` });
   } catch (e) {
