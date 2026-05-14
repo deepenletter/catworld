@@ -99,7 +99,7 @@ export function useAppState() {
 
     if (adminTemplate && generationMode === 'composite') {
       if (!adminTemplate.faceBox || !uploadedImageUrl) {
-        setError('관리자 템플릿에 얼굴 영역이 아직 설정되지 않았습니다.');
+        setError('관리자 템플릿에 고양이 기준 영역이 아직 설정되지 않았습니다.');
         setPhase('style_selected');
         setIsGenerating(false);
         return;
@@ -133,14 +133,14 @@ export function useAppState() {
 
     if (adminTemplate && generationMode === 'ai') {
       if (!adminTemplate.prompt.trim()) {
-        setError('AI 얼굴 편집에는 프롬프트가 필요합니다.');
+        setError('AI 고양이 편집에는 프롬프트가 필요합니다.');
         setPhase('style_selected');
         setIsGenerating(false);
         return;
       }
 
       if (!adminTemplate.faceBox) {
-        setError('AI 얼굴 편집에는 템플릿 얼굴 영역 설정이 필요합니다.');
+        setError('AI 고양이 편집에는 템플릿 기준 영역 설정이 필요합니다.');
         setPhase('style_selected');
         setIsGenerating(false);
         return;

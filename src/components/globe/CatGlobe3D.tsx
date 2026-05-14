@@ -393,7 +393,7 @@ export function CatGlobe3D({
       <Canvas
         camera={{ position: [0, 0.3, 2.9], fov: 50 }}
         gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent' }}
+        style={{ background: 'transparent', touchAction: 'none' }}
         dpr={[1, 2]}
       >
         <Scene
@@ -406,9 +406,14 @@ export function CatGlobe3D({
         />
       </Canvas>
 
-      {!hoveredCountry && !pendingCountry && (
+      {false && !hoveredCountry && !pendingCountry && (
         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/35 text-xs pointer-events-none select-none">
           마커를 클릭해 나라를 선택하세요 🐾
+        </p>
+      )}
+      {!hoveredCountry && !pendingCountry && (
+        <p className="pointer-events-none absolute bottom-24 left-1/2 -translate-x-1/2 select-none text-center text-xs text-white/35 md:bottom-4">
+          지구본을 드래그하거나 발바닥 마커를 눌러 나라를 선택해 주세요.
         </p>
       )}
     </div>

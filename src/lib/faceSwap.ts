@@ -1,7 +1,7 @@
 import type { FaceBox } from '@/types';
 
 export const DEFAULT_FACE_SWAP_PROMPT =
-  '사용자가 첨부한 사진 속 고양이 얼굴을 템플릿에 그대로 적용해 주세요. 고양이 얼굴 외 다른 요소는 절대 바뀌면 안 되며, 첨부한 고양이의 털과 생김새는 그대로 유지해 주세요.';
+  'Turn the cat in the template into the same cat from the user reference image. Keep the template pose and scene fixed, but match the user cat face, coat color, fur pattern, markings, and overall identity naturally.';
 
 export function buildFaceSwapPrompt(basePrompt?: string): string {
   const prompt = basePrompt?.trim() || DEFAULT_FACE_SWAP_PROMPT;
@@ -10,11 +10,11 @@ export function buildFaceSwapPrompt(basePrompt?: string): string {
     prompt,
     'Use the first image as the fixed template base image.',
     'Use the second image as the cat identity reference.',
-    'Edit only inside the masked cat face area.',
-    'Replace only the cat face in the template with the face of the reference cat.',
-    'Preserve the reference cat facial structure, fur pattern, markings, colors, eyes, muzzle, nose, ears, and overall likeness as faithfully as possible.',
-    'Do not change the template background, body, pose, clothing, props, camera angle, framing, lighting, shadows, or any other element outside the mask.',
-    'The output must look like a realistic face swap, not a pasted collage.',
+    'Within the masked region, transform the template cat into the reference cat.',
+    'Match the reference cat head shape, ears, eyes, muzzle, nose, coat colors, fur texture, markings, and visible neck or body fur as faithfully as possible.',
+    'The result should look like the same cat from the reference image naturally performing the exact pose from the template image.',
+    'Keep the template pose, body posture, paws, clothing, props, background, camera angle, framing, lighting, and every unmasked region unchanged.',
+    'Do not create a pasted collage. Blend the identity transfer realistically with the template scene.',
   ].join('\n');
 }
 
@@ -24,7 +24,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
     const isExternal = url.startsWith('http://') || url.startsWith('https://');
     if (isExternal) image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('템플릿 이미지를 불러오지 못했습니다.'));
+    image.onerror = () => reject(new Error('Failed to load the template image.'));
     image.src = isExternal ? `${url}${url.includes('?') ? '&' : '?'}_cb=${Date.now()}` : url;
   });
 }
@@ -68,6 +68,18 @@ export function getOpenAIEditSize(width: number, height: number): string {
   return `${finalW}x${finalH}`;
 }
 
+function eraseEllipse(
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+) {
+  context.beginPath();
+  context.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+  context.fill();
+}
+
 export async function createFaceSwapMaskData(
   templateUrl: string,
   faceBox: FaceBox,
@@ -82,18 +94,38 @@ export async function createFaceSwapMaskData(
 
   const context = canvas.getContext('2d');
   if (!context) {
-    throw new Error('마스크 캔버스를 만들지 못했습니다.');
+    throw new Error('Failed to create the mask canvas.');
   }
 
   context.fillStyle = 'rgba(255,255,255,1)';
   context.fillRect(0, 0, width, height);
 
-  const x = Math.round(faceBox.xRatio * width);
-  const y = Math.round(faceBox.yRatio * height);
-  const w = Math.round(faceBox.wRatio * width);
-  const h = Math.round(faceBox.hRatio * height);
+  const x = faceBox.xRatio * width;
+  const y = faceBox.yRatio * height;
+  const boxWidth = faceBox.wRatio * width;
+  const boxHeight = faceBox.hRatio * height;
+  const centerX = x + boxWidth / 2;
 
-  context.clearRect(x, y, w, h);
+  const headCenterY = y + boxHeight * 0.42;
+  const neckCenterY = y + boxHeight * 1.2;
+  const bodyCenterY = y + boxHeight * 2.35;
+
+  const headRadiusX = Math.min(boxWidth * 1.05, width * 0.48);
+  const headRadiusY = Math.min(boxHeight * 1.2, height * 0.3);
+  const neckRadiusX = Math.min(boxWidth * 1.45, width * 0.49);
+  const neckRadiusY = Math.min(boxHeight * 1.15, height * 0.28);
+  const bodyRadiusX = Math.min(boxWidth * 1.95, width * 0.49);
+  const bodyRadiusY = Math.min(boxHeight * 2.85, height * 0.49);
+
+  context.save();
+  context.globalCompositeOperation = 'destination-out';
+  context.fillStyle = 'rgba(0,0,0,1)';
+
+  eraseEllipse(context, centerX, headCenterY, headRadiusX, headRadiusY);
+  eraseEllipse(context, centerX, neckCenterY, neckRadiusX, neckRadiusY);
+  eraseEllipse(context, centerX, bodyCenterY, bodyRadiusX, bodyRadiusY);
+
+  context.restore();
 
   return {
     maskDataUrl: canvas.toDataURL('image/png'),

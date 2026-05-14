@@ -120,9 +120,9 @@ function FaceBoxEditor({
       <div className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">얼굴 위치 설정</h3>
+            <h3 className="text-lg font-bold text-gray-900">고양이 기준 영역 설정</h3>
             <p className="mt-0.5 text-sm text-gray-500">
-              템플릿 안에서 고양이 얼굴이 들어갈 영역을 드래그해 주세요.
+              템플릿 안에서 얼굴, 귀, 윗몸 털이 함께 반영될 영역을 넉넉하게 드래그해 주세요.
             </p>
           </div>
           <button
@@ -157,7 +157,7 @@ function FaceBoxEditor({
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="rounded bg-white/80 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                    얼굴 영역
+                    기준 영역
                   </span>
                 </div>
               </div>
@@ -295,8 +295,8 @@ function TemplateCard({
           </div>
           <p className="mt-2 text-xs text-gray-500">
             {isComposite
-              ? '현재 목표에 가장 잘 맞는 방식입니다. 얼굴 박스만 맞추면 바로 운영할 수 있습니다.'
-              : 'OpenAI API 키가 필요하고, 프롬프트 기반으로 템플릿을 다시 편집합니다.'}
+              ? '빠른 테스트용 간이 합성입니다. 털색과 무늬까지 자연스럽게 맞추려면 AI 편집 모드를 사용하세요.'
+              : '현재 목표에 가장 잘 맞는 방식입니다. 템플릿 포즈는 유지하면서 사용자 고양이의 얼굴, 귀, 털색, 무늬를 반영합니다.'}
           </p>
         </div>
 
@@ -347,7 +347,7 @@ function TemplateCard({
             onClick={onSetFaceBox}
             className="flex-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
           >
-            얼굴 위치 설정
+            기준 영역 설정
           </button>
           <button
             onClick={onDelete}
@@ -707,7 +707,7 @@ export default function AdminPage() {
               {activeCountryInfo.name} 템플릿이 아직 없습니다.
             </p>
             <p className="mb-6 text-sm text-gray-400">
-              먼저 템플릿 이미지를 올리고 얼굴 위치를 지정해 주세요.
+              먼저 템플릿 이미지를 올리고 기준 영역을 넉넉하게 지정해 주세요.
             </p>
             <button
               onClick={() => triggerUpload(activeCountry)}
@@ -748,10 +748,10 @@ export default function AdminPage() {
         <div className="mt-10 rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <h3 className="mb-2 text-sm font-bold text-amber-900">운영 가이드</h3>
           <ol className="list-inside list-decimal space-y-1 text-sm text-amber-800">
-            <li>지금 목표라면 새 템플릿은 먼저 `얼굴 합성` 모드로 두는 것을 추천합니다.</li>
-            <li>템플릿 업로드 후 `얼굴 위치 설정`으로 고양이 얼굴이 들어갈 영역을 지정합니다.</li>
+            <li>지금 목표라면 새 템플릿은 먼저 `AI 편집` 모드로 두는 것을 추천합니다.</li>
+            <li>템플릿 업로드 후 `기준 영역 설정`으로 고양이의 얼굴, 귀, 윗몸 털이 포함되게 넉넉히 지정합니다.</li>
             <li>모든 수정이 끝나면 상단의 `설정 저장`을 눌러 저장합니다.</li>
-            <li>AI 편집은 선택 사항입니다. 프롬프트와 OpenAI API 키가 있을 때만 사용하세요.</li>
+            <li>프롬프트는 사용자의 고양이가 템플릿의 자세를 그대로 따라하는 방향으로 유지하세요.</li>
           </ol>
         </div>
       </div>

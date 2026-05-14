@@ -36,17 +36,13 @@ export default function Home() {
         onGlobeClick={actions.goToGlobe}
       />
 
-      {/* ─── Dynamic experience zone ─────────────────────────────────────── */}
       <AnimatePresence mode="wait">
-
-        {/* Landing */}
         {state.phase === 'landing' && (
           <motion.div key="landing" variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <HeroSection onStart={actions.goToGlobe} />
           </motion.div>
         )}
 
-        {/* Globe selection */}
         {state.phase === 'globe' && (
           <motion.div key="globe" variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <GlobeSection
@@ -56,7 +52,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Country selected → show style cards */}
         {(state.phase === 'country_selected' || state.phase === 'style_selected') &&
           state.selectedCountry && (
             <motion.div key="country" variants={pageVariants} initial="initial" animate="animate" exit="exit">
@@ -67,7 +62,6 @@ export default function Home() {
                 onBack={actions.goToGlobe}
               />
 
-              {/* Upload section slides in when style is selected */}
               <AnimatePresence>
                 {state.phase === 'style_selected' && state.selectedStyle && (
                   <motion.div
@@ -94,7 +88,6 @@ export default function Home() {
             </motion.div>
           )}
 
-        {/* Generating */}
         {state.phase === 'generating' && (
           <motion.div
             key="generating"
@@ -112,7 +105,6 @@ export default function Home() {
           </motion.div>
         )}
 
-        {/* Result */}
         {state.phase === 'result' && (
           <motion.div key="result" variants={pageVariants} initial="initial" animate="animate" exit="exit">
             <ResultSection
@@ -127,27 +119,11 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* ─── Static sections (landing & result only) ─────────────────────── */}
       {showStaticSections && (
         <>
           <GallerySection />
           <FAQSection />
         </>
-      )}
-
-      {state.phase !== 'globe' && (
-        <footer className="bg-warm-900 dark:bg-warm-950 text-warm-400 py-10 px-6 text-center border-t border-warm-800">
-          <div className="max-w-xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <span className="text-xl font-display font-bold text-primary">세계냥주</span>
-              <span>🐾</span>
-            </div>
-            <p className="text-sm mb-2">우리집 고양이, 세계 여행 떠나다</p>
-            <p className="text-xs text-warm-600">
-              © 2024 세계냥주 · 고양이 얼굴 정체성 보존 AI 기반 이미지 변환 서비스
-            </p>
-          </div>
-        </footer>
       )}
     </>
   );
