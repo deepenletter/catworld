@@ -378,8 +378,9 @@ export default function AdminPage() {
         headers: { 'x-admin-pw': password },
         body: form,
       });
-      if (!res.ok) throw new Error('Upload failed');
-      const { url } = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      const { url } = data;
 
       const newTemplate: AdminTemplate = {
         id: `${uploadingFor}_${Date.now()}`,
@@ -393,8 +394,9 @@ export default function AdminPage() {
         ...prev,
         [uploadingFor]: [...(prev[uploadingFor] ?? []), newTemplate],
       }));
-    } catch {
-      alert('업로드에 실패했습니다. 다시 시도해주세요.');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '알 수 없는 오류';
+      alert(`업로드 실패: ${msg}`);
     } finally {
       setUploadingFor(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
