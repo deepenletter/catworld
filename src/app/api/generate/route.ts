@@ -1,7 +1,7 @@
 import OpenAI, { toFile } from 'openai';
 import { NextResponse } from 'next/server';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       prompt,
       n: 1,
       size: '1024x1024',
-      quality: 'high',
+      quality: 'medium',
     });
 
     const b64 = response.data?.[0]?.b64_json;
