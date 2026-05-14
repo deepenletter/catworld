@@ -108,7 +108,9 @@ export function useAppState() {
         form.append('file', uploadedFile);
         form.append('prompt', adminTemplate.prompt);
 
-        const res = await fetch('/api/generate', { method: 'POST', body: form });
+        const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
+        const generateUrl = base ? `${base}/generate` : '/api/generate';
+        const res = await fetch(generateUrl, { method: 'POST', body: form });
         clearInterval(timer);
 
         let data: { error?: string; resultUrl?: string } = {};
