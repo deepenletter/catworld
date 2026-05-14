@@ -451,11 +451,14 @@ export default function AdminPage() {
         },
         body: JSON.stringify(config),
       });
-      if (!res.ok) throw new Error('Save failed');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Save failed');
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
-    } catch {
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '알 수 없는 오류';
       setSaveStatus('error');
+      alert(`저장 실패: ${msg}`);
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
