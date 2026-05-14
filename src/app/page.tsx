@@ -77,6 +77,8 @@ export default function Home() {
                       uploadedImage={state.uploadedImageUrl}
                       isGenerating={state.isGenerating}
                       error={state.error}
+                      dailyQuota={state.dailyQuota}
+                      dailyQuotaApplies={state.dailyQuotaApplies}
                       onUpload={actions.handleUpload}
                       onClearUpload={actions.clearUpload}
                       onGenerate={actions.generate}

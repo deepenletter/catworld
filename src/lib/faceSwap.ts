@@ -34,7 +34,7 @@ function snapToMultipleOf16(value: number): number {
 }
 
 export function getOpenAIEditSize(width: number, height: number): string {
-  const maxEdge = 2048;
+  const maxEdge = 1536;
   const maxAspectRatio = 3;
 
   let w = width;

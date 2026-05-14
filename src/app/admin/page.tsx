@@ -11,7 +11,6 @@ import {
   getTemplateGenerationMode,
   normalizeAdminConfig,
 } from '@/lib/adminConfig';
-import { DEFAULT_FACE_SWAP_PROMPT } from '@/lib/faceSwap';
 
 const COUNTRIES: { slug: string; name: string; code: string }[] = [
   { slug: 'japan', name: '일본', code: 'jp' },
@@ -195,7 +194,6 @@ type TemplateCardProps = {
   template: AdminTemplate;
   onTitleChange: (value: string) => void;
   onBrightnessChange: (value: number) => void;
-  onPromptChange: (value: string) => void;
   onGenerationModeChange: (mode: TemplateGenerationMode) => void;
   onSetFaceBox: () => void;
   onDelete: () => void;
@@ -205,16 +203,13 @@ function TemplateCard({
   template,
   onTitleChange,
   onBrightnessChange,
-  onPromptChange,
   onGenerationModeChange,
   onSetFaceBox,
   onDelete,
 }: TemplateCardProps) {
   const mode = getTemplateGenerationMode(template);
   const isComposite = mode === 'composite';
-  const isReady = isComposite
-    ? !!template.faceBox
-    : !!template.faceBox && !!template.prompt.trim();
+  const isReady = !!template.faceBox;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
@@ -314,24 +309,6 @@ function TemplateCard({
             value={template.brightness}
             onChange={(event) => onBrightnessChange(Number(event.target.value))}
             className="w-full accent-blue-600"
-          />
-        </div>
-
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <label className="text-xs font-semibold text-gray-500">AI 프롬프트</label>
-            {!isComposite && (
-              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                AI에서 사용
-              </span>
-            )}
-          </div>
-          <textarea
-            value={template.prompt}
-            onChange={(event) => onPromptChange(event.target.value)}
-            rows={5}
-            className="w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-xs leading-relaxed focus:border-transparent focus:outline-none focus:ring-2 focus:ring-purple-500"
-            placeholder="AI 편집 모드에서 사용할 프롬프트를 입력하세요."
           />
         </div>
 
@@ -447,7 +424,7 @@ export default function AdminPage() {
         url: data.url,
         brightness: 100,
         faceBox: null,
-        prompt: DEFAULT_FACE_SWAP_PROMPT,
+        prompt: '',
         generationMode: 'ai',
       };
 
@@ -730,9 +707,6 @@ export default function AdminPage() {
                 onBrightnessChange={(value) =>
                   updateTemplate(activeCountry, template.id, { brightness: value })
                 }
-                onPromptChange={(value) =>
-                  updateTemplate(activeCountry, template.id, { prompt: value })
-                }
                 onGenerationModeChange={(mode) =>
                   updateTemplate(activeCountry, template.id, { generationMode: mode })
                 }
@@ -751,7 +725,7 @@ export default function AdminPage() {
             <li>지금 목표라면 새 템플릿은 먼저 `AI 편집` 모드로 두는 것을 추천합니다.</li>
             <li>템플릿 업로드 후 `기준 영역 설정`으로 고양이의 얼굴, 귀, 윗몸 털이 포함되게 넉넉히 지정합니다.</li>
             <li>모든 수정이 끝나면 상단의 `설정 저장`을 눌러 저장합니다.</li>
-            <li>프롬프트는 사용자의 고양이가 템플릿의 자세를 그대로 따라하는 방향으로 유지하세요.</li>
+            <li>프롬프트는 시스템 기본값을 사용하므로 별도로 입력하지 않아도 됩니다.</li>
           </ol>
         </div>
       </div>

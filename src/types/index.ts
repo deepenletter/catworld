@@ -79,10 +79,17 @@ export type AdminTemplate = {
   url: string;           // Vercel Blob public URL
   brightness: number;    // 50-150, default 100
   faceBox: FaceBox | null;
-  prompt: string;        // AI generation prompt
+  prompt: string;        // reserved for legacy overrides; empty uses the system default prompt
   generationMode?: TemplateGenerationMode;
 };
 
 export type AdminCountryConfig = {
   [countrySlug: string]: AdminTemplate[];
+};
+
+export type DailyGenerationQuota = {
+  day: string;
+  limit: number;
+  used: number;
+  remaining: number;
 };
