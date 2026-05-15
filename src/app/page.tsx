@@ -79,6 +79,7 @@ export default function Home() {
                       error={state.error}
                       dailyQuota={state.dailyQuota}
                       dailyQuotaApplies={state.dailyQuotaApplies}
+                      adminTestingMode={state.adminTestingMode}
                       onUpload={actions.handleUpload}
                       onClearUpload={actions.clearUpload}
                       onGenerate={actions.generate}

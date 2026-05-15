@@ -79,7 +79,7 @@ export type AdminTemplate = {
   url: string;           // Vercel Blob public URL
   brightness: number;    // 50-150, default 100
   faceBox: FaceBox | null;
-  prompt: string;        // reserved for legacy overrides; empty uses the system default prompt
+  prompt: string;        // optional extra detail appended after the fixed system prompt
   generationMode?: TemplateGenerationMode;
 };
 

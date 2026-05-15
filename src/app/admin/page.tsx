@@ -223,6 +223,7 @@ type TemplateCardProps = {
   onTitleChange: (value: string) => void;
   onBrightnessChange: (value: number) => void;
   onGenerationModeChange: (mode: TemplateGenerationMode) => void;
+  onPromptChange: (value: string) => void;
   onSetFaceBox: () => void;
   onDelete: () => void;
 };
@@ -232,6 +233,7 @@ function TemplateCard({
   onTitleChange,
   onBrightnessChange,
   onGenerationModeChange,
+  onPromptChange,
   onSetFaceBox,
   onDelete,
 }: TemplateCardProps) {
@@ -338,6 +340,26 @@ function TemplateCard({
             onChange={(event) => onBrightnessChange(Number(event.target.value))}
             className="w-full accent-blue-600"
           />
+        </div>
+
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-xs font-semibold text-gray-500">추가 디테일</label>
+            <span className="text-[11px] text-gray-400">고정 규칙 뒤에 보조로 추가</span>
+          </div>
+          <textarea
+            value={template.prompt}
+            onChange={(event) => onPromptChange(event.target.value)}
+            disabled={isComposite}
+            rows={4}
+            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm leading-relaxed focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+            placeholder="예: 털 결을 더 선명하게, 눈동자 색과 코 색을 최대한 정확하게 유지"
+          />
+          <p className="mt-2 text-xs text-gray-500">
+            {isComposite
+              ? '얼굴 합성 모드에서는 사용되지 않습니다. AI 편집 모드에서만 시스템 고정 규칙 뒤에 추가됩니다.'
+              : '시스템이 템플릿 고정 규칙을 먼저 적용하고, 여기에 적은 디테일을 그 다음 우선순위로 함께 사용합니다.'}
+          </p>
         </div>
 
         <div>
@@ -750,6 +772,9 @@ export default function AdminPage() {
                 }
                 onGenerationModeChange={(mode) =>
                   updateTemplate(activeCountry, template.id, { generationMode: mode })
+                }
+                onPromptChange={(value) =>
+                  updateTemplate(activeCountry, template.id, { prompt: value })
                 }
                 onSetFaceBox={() =>
                   setEditingFaceBox({ templateId: template.id, countrySlug: activeCountry })

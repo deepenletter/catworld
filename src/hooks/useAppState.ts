@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AppPhase, Country, DailyGenerationQuota, StyleCard } from '@/types';
 import { api } from '@/lib/api';
 import { getTemplateGenerationMode } from '@/lib/adminConfig';
@@ -20,6 +20,7 @@ export type AppStateValues = {
   error: string | null;
   dailyQuota: DailyGenerationQuota | null;
   dailyQuotaApplies: boolean;
+  adminTestingMode: boolean;
 };
 
 export type AppActions = {
@@ -39,6 +40,7 @@ type GenerateApiResponse = {
   error?: string;
   resultUrl?: string;
   quota?: DailyGenerationQuota | null;
+  quotaBypassed?: boolean;
 };
 
 export function useAppState() {
@@ -52,6 +54,7 @@ export function useAppState() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dailyQuota, setDailyQuota] = useState<DailyGenerationQuota | null>(null);
+  const [adminTestingMode, setAdminTestingMode] = useState(false);
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -59,6 +62,7 @@ export function useAppState() {
     const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
     if (base) {
       setDailyQuota(null);
+      setAdminTestingMode(false);
       return;
     }
 
@@ -66,12 +70,38 @@ export function useAppState() {
       const response = await fetch('/api/generate', { cache: 'no-store' });
       if (!response.ok) return;
 
-      const data = (await response.json()) as { quota?: DailyGenerationQuota };
+      const data = (await response.json()) as {
+        quota?: DailyGenerationQuota | null;
+        quotaBypassed?: boolean;
+      };
       setDailyQuota(data.quota ?? null);
+      setAdminTestingMode(Boolean(data.quotaBypassed));
     } catch {
       // Ignore quota fetch failures and fall back to server-side enforcement.
     }
   }, []);
+
+  useEffect(() => {
+    if (phase !== 'style_selected') return;
+
+    const refreshQuota = () => {
+      void loadDailyQuota();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshQuota();
+      }
+    };
+
+    window.addEventListener('focus', refreshQuota);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', refreshQuota);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [phase, loadDailyQuota]);
 
   const goHome = useCallback(() => {
     setSelectedCountry(null);
@@ -82,6 +112,7 @@ export function useAppState() {
     setGenerationProgress(0);
     setError(null);
     setDailyQuota(null);
+    setAdminTestingMode(false);
     setPhase('globe');
   }, []);
 
@@ -97,6 +128,7 @@ export function useAppState() {
     setResultImageUrl(null);
     setError(null);
     setDailyQuota(null);
+    setAdminTestingMode(false);
     setPhase('country_selected');
   }, []);
 
@@ -190,6 +222,9 @@ export function useAppState() {
         form.append('templateTitle', selectedStyle.title);
         form.append('templateDescription', selectedStyle.description);
         form.append('styleTags', JSON.stringify(selectedStyle.tags ?? []));
+        if (adminTemplate.prompt.trim()) {
+          form.append('prompt', adminTemplate.prompt.trim());
+        }
 
         const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
         const generateUrl = base ? `${base}/generate` : '/api/generate';
@@ -204,9 +239,8 @@ export function useAppState() {
           throw new Error(`서버 응답을 읽지 못했습니다. (${response.status}) ${text.slice(0, 120)}`);
         }
 
-        if (data.quota) {
-          setDailyQuota(data.quota);
-        }
+        setDailyQuota(data.quota ?? null);
+        setAdminTestingMode(Boolean(data.quotaBypassed));
 
         if (!response.ok) {
           throw new Error(data.error ?? 'AI 고양이 편집 요청이 실패했습니다.');
@@ -270,6 +304,7 @@ export function useAppState() {
     setUploadedFile(null);
     setGenerationProgress(0);
     setError(null);
+    setAdminTestingMode(false);
     void loadDailyQuota();
     setPhase('style_selected');
   }, [loadDailyQuota]);
@@ -280,6 +315,7 @@ export function useAppState() {
     setUploadedFile(null);
     setError(null);
     setDailyQuota(null);
+    setAdminTestingMode(false);
     setPhase('country_selected');
   }, []);
 
@@ -292,6 +328,7 @@ export function useAppState() {
     setGenerationProgress(0);
     setError(null);
     setDailyQuota(null);
+    setAdminTestingMode(false);
     setPhase('globe');
   }, []);
 
@@ -299,7 +336,8 @@ export function useAppState() {
   const dailyQuotaApplies =
     !!currentTemplate &&
     getTemplateGenerationMode(currentTemplate) === 'ai' &&
-    !process.env.NEXT_PUBLIC_GENERATE_API_URL;
+    !process.env.NEXT_PUBLIC_GENERATE_API_URL &&
+    !adminTestingMode;
 
   return {
     state: {
@@ -314,6 +352,7 @@ export function useAppState() {
       error,
       dailyQuota,
       dailyQuotaApplies,
+      adminTestingMode,
     },
     actions: {
       goHome,

@@ -16,6 +16,7 @@ type Props = {
   error: string | null;
   dailyQuota: DailyGenerationQuota | null;
   dailyQuotaApplies: boolean;
+  adminTestingMode: boolean;
   onUpload: (file: File, url: string) => void;
   onClearUpload: () => void;
   onGenerate: () => void;
@@ -30,6 +31,7 @@ export function UploadSection({
   error,
   dailyQuota,
   dailyQuotaApplies,
+  adminTestingMode,
   onUpload,
   onClearUpload,
   onGenerate,
@@ -97,6 +99,12 @@ export function UploadSection({
           <p className="mb-6 text-sm text-warm-500 dark:text-warm-400">
             정면에 가깝고 얼굴과 털 무늬가 잘 보이는 사진일수록 결과가 좋아져요.
           </p>
+
+          {adminTestingMode && (
+            <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              관리자 테스트 모드입니다. 현재 브라우저에서는 생성 사용량 제한이 적용되지 않습니다.
+            </div>
+          )}
 
           {dailyQuotaApplies && dailyQuota && (
             <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

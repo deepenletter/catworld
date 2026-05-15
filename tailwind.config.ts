@@ -46,8 +46,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-gowun)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-nanum)', 'Georgia', 'serif'],
+        sans: ['LaundryGothic', 'system-ui', 'sans-serif'],
+        display: ['LaundryGothic', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
         'hero-gradient': 'radial-gradient(ellipse at 60% 40%, #FFFDE7 0%, #FFFBCC 60%, #FFF5B3 100%)',
