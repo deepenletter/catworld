@@ -8,12 +8,20 @@ export const maxDuration = 300;
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const imageModel = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2';
 const imageQuality = (
   process.env.OPENAI_IMAGE_QUALITY ?? 'high'
 ) as 'low' | 'medium' | 'high' | 'auto';
 const outputFormat = (process.env.OPENAI_IMAGE_OUTPUT_FORMAT ?? 'jpeg') as 'png' | 'jpeg' | 'webp';
+
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured.');
+  }
+
+  return new OpenAI({ apiKey });
+}
 
 function getOutputCompression() {
   if (outputFormat === 'png') return undefined;
@@ -99,11 +107,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: 'OPENAI_API_KEY is not configured.' }, { status: 500 });
-  }
-
   try {
+    const openai = getOpenAIClient();
     const quotaBypassed = isAdminRequest(req);
     const quota = quotaBypassed ? null : getDailyQuota(req);
 
