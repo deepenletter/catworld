@@ -136,8 +136,8 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
         </motion.div>
 
         {configLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[0, 1, 2, 3].map((index) => (
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            {[0, 1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
                 className="aspect-[3/4] rounded-2xl bg-gray-200 animate-pulse"
@@ -147,7 +147,7 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
         )}
 
         {!configLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {styleCards.map((style, index) => (
               <StyleCard
                 key={style.id}

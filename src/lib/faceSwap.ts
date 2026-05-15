@@ -85,15 +85,26 @@ export function getOpenAIEditSize(width: number, height: number): string {
   return TEMPLATE_OUTPUT_SIZE;
 }
 
-function eraseEllipse(
+function eraseRoundedRect(
   context: CanvasRenderingContext2D,
-  centerX: number,
-  centerY: number,
-  radiusX: number,
-  radiusY: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
 ) {
+  const safeRadius = Math.max(0, Math.min(radius, width / 2, height / 2));
   context.beginPath();
-  context.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+  context.moveTo(x + safeRadius, y);
+  context.lineTo(x + width - safeRadius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+  context.lineTo(x + width, y + height - safeRadius);
+  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+  context.lineTo(x + safeRadius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+  context.lineTo(x, y + safeRadius);
+  context.quadraticCurveTo(x, y, x + safeRadius, y);
+  context.closePath();
   context.fill();
 }
 
@@ -121,32 +132,15 @@ export async function createFaceSwapMaskData(
   const y = faceBox.yRatio * height;
   const boxWidth = faceBox.wRatio * width;
   const boxHeight = faceBox.hRatio * height;
-  const centerX = x + boxWidth / 2;
-
-  const headCenterY = y + boxHeight * 0.4;
-  const neckCenterY = y + boxHeight * 1.02;
-  const chestCenterY = y + boxHeight * 1.72;
-  const torsoCenterY = y + boxHeight * 2.62;
-
-  const headRadiusX = Math.min(boxWidth * 0.98, width * 0.18);
-  const headRadiusY = Math.min(boxHeight * 1.06, height * 0.17);
-  const neckRadiusX = Math.min(boxWidth * 1.12, width * 0.2);
-  const neckRadiusY = Math.min(boxHeight * 0.78, height * 0.12);
-  const chestRadiusX = Math.min(boxWidth * 1.34, width * 0.24);
-  const chestRadiusY = Math.min(boxHeight * 1.42, height * 0.22);
-  const torsoRadiusX = Math.min(boxWidth * 1.08, width * 0.19);
-  const torsoRadiusY = Math.min(boxHeight * 2.05, height * 0.26);
+  const cornerRadius = Math.min(boxWidth, boxHeight) * 0.08;
 
   context.save();
   context.globalCompositeOperation = 'destination-out';
   context.fillStyle = 'rgba(0,0,0,1)';
 
-  eraseEllipse(context, centerX, headCenterY, headRadiusX, headRadiusY);
-  eraseEllipse(context, centerX, neckCenterY, neckRadiusX, neckRadiusY);
-  eraseEllipse(context, centerX, chestCenterY, chestRadiusX, chestRadiusY);
-  // Extend through the center of the torso so coat color transfers more naturally
-  // while the untouched outer silhouette helps preserve the template pose.
-  eraseEllipse(context, centerX, torsoCenterY, torsoRadiusX, torsoRadiusY);
+  // Keep the real edit mask closely aligned with the saved admin frame so the
+  // selected area is predictable during testing and template setup.
+  eraseRoundedRect(context, x, y, boxWidth, boxHeight, cornerRadius);
 
   context.restore();
 

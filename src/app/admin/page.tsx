@@ -149,7 +149,7 @@ function FaceBoxEditor({
           <div>
             <h3 className="text-lg font-bold text-gray-900">고양이 기준 영역 설정</h3>
             <p className="mt-0.5 text-sm text-gray-500">
-              얼굴과 귀를 중심으로, 목과 몸통 중앙 털이 조금 이어지게 잡아 주세요. 의자나 소품, 다리, 배경까지 크게 포함하지 않는 편이 좋습니다.
+              이제 그린 프레임이 실제 편집 영역과 거의 같게 적용됩니다. 바꾸고 싶은 고양이 부분만 그대로 감싸고, 배경이나 소품은 포함하지 않게 잡아 주세요.
             </p>
           </div>
           <button
@@ -184,7 +184,7 @@ function FaceBoxEditor({
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="rounded bg-white/80 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                    기준 영역
+                    실제 편집 영역
                   </span>
                 </div>
               </div>
@@ -764,7 +764,7 @@ export default function AdminPage() {
           <h3 className="mb-2 text-sm font-bold text-amber-900">운영 가이드</h3>
           <ol className="list-inside list-decimal space-y-1 text-sm text-amber-800">
             <li>지금 목표라면 새 템플릿은 먼저 `AI 편집` 모드로 두는 것을 추천합니다.</li>
-            <li>템플릿 업로드 후 `기준 영역 설정`은 얼굴, 귀, 목, 몸통 중앙 털 위주로 잡고 의자나 배경은 포함하지 않게 해 주세요.</li>
+            <li>템플릿 업로드 후 `기준 영역 설정`은 실제로 교체할 고양이 영역만 감싸 주세요. 이제 프레임이 실제 편집 영역과 거의 같게 적용됩니다.</li>
             <li>모든 수정이 끝나면 상단의 `설정 저장`을 눌러 저장합니다.</li>
             <li>프롬프트는 시스템 기본값을 사용하므로 별도로 입력하지 않아도 됩니다.</li>
           </ol>

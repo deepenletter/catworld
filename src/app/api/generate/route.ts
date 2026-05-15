@@ -1,5 +1,6 @@
 import OpenAI, { toFile } from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
+import { isAdminRequest } from '@/lib/adminSession';
 import { applyDailyQuotaCookie, consumeDailyQuota, getDailyQuota } from '@/lib/dailyQuota';
 import { buildFaceSwapPrompt } from '@/lib/faceSwap';
 
@@ -64,6 +65,23 @@ function parseStyleTags(rawStyleTags: string | null): string[] | undefined {
 }
 
 export async function GET(req: NextRequest) {
+  if (isAdminRequest(req)) {
+    return NextResponse.json(
+      {
+        quota: null,
+        settings: {
+          model: imageModel,
+          quality: imageQuality,
+          format: outputFormat,
+        },
+        quotaBypassed: true,
+      },
+      {
+        headers: { 'Cache-Control': 'no-store' },
+      },
+    );
+  }
+
   const quota = getDailyQuota(req);
   return NextResponse.json(
     {
@@ -86,8 +104,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const quota = getDailyQuota(req);
-    if (quota.remaining <= 0) {
+    const quotaBypassed = isAdminRequest(req);
+    const quota = quotaBypassed ? null : getDailyQuota(req);
+
+    if (quota && quota.remaining <= 0) {
       const response = NextResponse.json(
         {
           error: `오늘 생성 시도 ${quota.limit}회를 모두 사용했습니다. 내일 다시 시도해 주세요.`,
@@ -176,7 +196,7 @@ export async function POST(req: NextRequest) {
       throw new Error('No edited image was returned from OpenAI.');
     }
 
-    const nextQuota = consumeDailyQuota(req);
+    const nextQuota = quotaBypassed ? null : consumeDailyQuota(req);
     const usage = (
       response as {
         usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
@@ -188,12 +208,17 @@ export async function POST(req: NextRequest) {
         resultUrl: `data:${getOutputMimeType()};base64,${b64}`,
         quota: nextQuota,
         usage: usage ?? null,
+        quotaBypassed,
       },
       {
         headers: { 'Cache-Control': 'no-store' },
       },
     );
-    applyDailyQuotaCookie(json, nextQuota);
+
+    if (nextQuota) {
+      applyDailyQuotaCookie(json, nextQuota);
+    }
+
     return json;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

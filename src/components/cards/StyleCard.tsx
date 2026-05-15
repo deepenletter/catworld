@@ -74,18 +74,18 @@ export function StyleCard({ style, isSelected, onSelect, index }: Props) {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-3 right-3 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md"
+            className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md sm:right-3 sm:top-3 sm:h-7 sm:w-7"
           >
-            <Check className="w-4 h-4 text-white" strokeWidth={3} />
+            <Check className="h-3.5 w-3.5 text-white sm:h-4 sm:w-4" strokeWidth={3} />
           </motion.div>
         )}
 
         {/* Tags */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1 sm:left-3 sm:top-3">
           {style.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="bg-black/30 backdrop-blur-sm text-white/90 text-[10px] px-2 py-0.5 rounded-full font-medium"
+              className="rounded-full bg-black/30 px-1.5 py-0.5 text-[9px] font-medium text-white/90 backdrop-blur-sm sm:px-2 sm:text-[10px]"
             >
               {tag}
             </span>
@@ -94,17 +94,17 @@ export function StyleCard({ style, isSelected, onSelect, index }: Props) {
       </div>
 
       {/* Card body */}
-      <div className="p-4">
-        <h3 className="font-semibold text-warm-900 text-base mb-1 group-hover:text-primary-dark transition-colors">
+      <div className="p-3 sm:p-4">
+        <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-warm-900 transition-colors group-hover:text-primary-dark sm:text-base">
           {style.title}
         </h3>
-        <p className="text-warm-500 text-xs leading-relaxed line-clamp-2">
+        <p className="line-clamp-2 text-[11px] leading-relaxed text-warm-500 sm:text-xs">
           {style.description}
         </p>
 
         {/* Select indicator */}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex gap-1">
+        <div className="mt-2.5 flex items-center justify-between sm:mt-3">
+          <div className="hidden gap-1 sm:flex">
             {style.tags.slice(2).map((tag) => (
               <span
                 key={tag}
@@ -116,7 +116,7 @@ export function StyleCard({ style, isSelected, onSelect, index }: Props) {
           </div>
           <span
             className={clsx(
-              'text-xs font-medium transition-colors',
+              'text-[11px] font-medium transition-colors sm:text-xs',
               isSelected ? 'text-primary' : 'text-warm-400 group-hover:text-primary'
             )}
           >
