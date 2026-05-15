@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import type { AppPhase } from '@/types';
 
@@ -40,7 +41,7 @@ export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
           <span className="text-xl font-display font-bold text-primary tracking-tight group-hover:opacity-80 transition-opacity">
             세계냥주
           </span>
-          <span className="text-lg leading-none">🐾</span>
+          <CatPawIcon size={18} tone="hovered" className="shrink-0" />
         </button>
 
         {/* Desktop nav */}

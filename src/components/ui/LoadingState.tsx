@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country, StyleCard } from '@/types';
 
 type Props = {
@@ -33,16 +34,16 @@ export function LoadingState({ progress, country, style }: Props) {
         <motion.div
           animate={{ scale: [1, 1.08, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="text-7xl"
+          className="flex justify-center"
         >
-          🐾
+          <CatPawIcon size={78} tone="selected" />
         </motion.div>
 
         {/* Orbit paws */}
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="absolute top-1/2 left-1/2 text-xl"
+            className="absolute left-1/2 top-1/2"
             animate={{ rotate: 360 }}
             transition={{
               duration: 3 + i * 0.7,
@@ -52,16 +53,15 @@ export function LoadingState({ progress, country, style }: Props) {
             }}
             style={{ originX: '50%', originY: '50%' }}
           >
-            <span
+            <div
               className="absolute"
               style={{
                 transform: `translate(-50%, -50%) translateX(${60 + i * 20}px)`,
-                fontSize: `${18 - i * 3}px`,
                 opacity: 0.6 - i * 0.1,
               }}
             >
-              🐾
-            </span>
+              <CatPawIcon size={18 - i * 2} tone={i === 0 ? 'hovered' : 'ambient'} />
+            </div>
           </motion.div>
         ))}
       </div>
@@ -83,7 +83,7 @@ export function LoadingState({ progress, country, style }: Props) {
         변신 중이에요
       </h2>
       <p className="text-warm-500 dark:text-warm-400 mb-10 text-sm">
-        고양이 얼굴 정체성은 그대로 유지되며, 스타일만 바뀝니다.
+        사용자의 고양이 생김새와 털은 유지하고, 자세와 장면은 템플릿을 따라갑니다.
       </p>
 
       {/* Progress bar */}

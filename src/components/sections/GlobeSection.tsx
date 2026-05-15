@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import { countries } from '@/data/countries';
 
@@ -23,7 +24,9 @@ const CatGlobe3D = dynamic(
     loading: () => (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 animate-float text-5xl">🐾</div>
+          <div className="mb-4 flex justify-center animate-float">
+            <CatPawIcon size={54} tone="ambient" className="opacity-80" />
+          </div>
           <p className="text-sm text-white/40">지구본을 불러오는 중입니다.</p>
         </div>
       </div>

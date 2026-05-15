@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
@@ -136,7 +137,7 @@ function TwinklingStars() {
 // ─── Cute 2D Cat Sprite (walks on globe rim with 4 legs) ─────────────────────
 
 
-// ─── Country marker (🐾 paw) ──────────────────────────────────────────────────
+// ─── Country marker ──────────────────────────────────────────────────────────
 
 function CountryMarker({
   country, isHovered, isSelected, onHover, onClick,
@@ -183,17 +184,10 @@ function CountryMarker({
               : 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
             cursor: 'pointer',
           }}>
-            <svg viewBox="0 0 100 100" width={isSelected ? 26 : 22} height={isSelected ? 26 : 22} style={{ display: 'block' }}>
-              {/* 3 toe pads */}
-              <ellipse cx="20" cy="22" rx="13" ry="15" fill={isSelected ? '#FFE234' : isHovered ? '#FFD700' : '#F5C518'} />
-              <ellipse cx="50" cy="13" rx="13" ry="15" fill={isSelected ? '#FFE234' : isHovered ? '#FFD700' : '#F5C518'} />
-              <ellipse cx="80" cy="22" rx="13" ry="15" fill={isSelected ? '#FFE234' : isHovered ? '#FFD700' : '#F5C518'} />
-              {/* Palm pad */}
-              <path
-                d="M14,46 Q10,78 50,83 Q90,78 86,46 Q86,33 66,31 Q60,35 50,35 Q40,35 34,31 Q14,33 14,46Z"
-                fill={isSelected ? '#FFE234' : isHovered ? '#FFD700' : '#F5C518'}
-              />
-            </svg>
+            <CatPawIcon
+              size={isSelected ? 26 : isHovered ? 23 : 20}
+              tone={isSelected ? 'selected' : isHovered ? 'hovered' : 'default'}
+            />
           </span>
           {(isHovered || isSelected) && (
             <div style={{
@@ -408,7 +402,7 @@ export function CatGlobe3D({
 
       {false && !hoveredCountry && !pendingCountry && (
         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/35 text-xs pointer-events-none select-none">
-          마커를 클릭해 나라를 선택하세요 🐾
+          마커를 클릭해 나라를 선택하세요.
         </p>
       )}
       {!hoveredCountry && !pendingCountry && (

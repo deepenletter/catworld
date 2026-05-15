@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import { Globe, Sparkles } from 'lucide-react';
 
 type Props = {
@@ -29,19 +30,21 @@ export function HeroSection({ onStart }: Props) {
         <div className="absolute bottom-1/3 left-1/5 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl" />
         {/* Floating paws */}
         {[
-          { top: '15%', left: '8%', size: '2rem', delay: '0s', rot: '-12deg' },
-          { top: '70%', right: '6%', size: '1.5rem', delay: '1.5s', rot: '20deg' },
-          { top: '30%', right: '12%', size: '1.2rem', delay: '0.8s', rot: '5deg' },
-          { top: '80%', left: '15%', size: '1.8rem', delay: '2s', rot: '-8deg' },
+          { top: '15%', left: '8%', size: 32, delay: '0s', rot: '-12deg' },
+          { top: '70%', right: '6%', size: 24, delay: '1.5s', rot: '20deg' },
+          { top: '30%', right: '12%', size: 21, delay: '0.8s', rot: '5deg' },
+          { top: '80%', left: '15%', size: 28, delay: '2s', rot: '-8deg' },
         ].map((p, i) => (
           <motion.div
             key={i}
-            className="absolute text-primary/20 dark:text-primary/15 select-none"
-            style={{ top: p.top, left: (p as any).left, right: (p as any).right, fontSize: p.size, rotate: p.rot }}
+            className="absolute select-none"
+            style={{ top: p.top, left: (p as any).left, right: (p as any).right, rotate: p.rot }}
             animate={{ y: [0, -12, 0] }}
             transition={{ duration: 5 + i, repeat: Infinity, ease: 'easeInOut', delay: parseFloat(p.delay) }}
           >
-            🐾
+            <div className="opacity-25 dark:opacity-20">
+              <CatPawIcon size={p.size} tone="ambient" />
+            </div>
           </motion.div>
         ))}
       </div>

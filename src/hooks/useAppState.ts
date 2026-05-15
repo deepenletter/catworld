@@ -186,6 +186,10 @@ export function useAppState() {
         form.append('templateUrl', adminTemplate.url);
         form.append('maskDataUrl', maskDataUrl);
         form.append('size', size);
+        form.append('countryName', selectedCountry.name);
+        form.append('templateTitle', selectedStyle.title);
+        form.append('templateDescription', selectedStyle.description);
+        form.append('styleTags', JSON.stringify(selectedStyle.tags ?? []));
 
         const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
         const generateUrl = base ? `${base}/generate` : '/api/generate';

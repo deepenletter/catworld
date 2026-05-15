@@ -52,6 +52,17 @@ function parseDataUrl(dataUrl: string) {
   };
 }
 
+function parseStyleTags(rawStyleTags: string | null): string[] | undefined {
+  if (!rawStyleTags) return undefined;
+
+  try {
+    const parsed = JSON.parse(rawStyleTags);
+    return Array.isArray(parsed) ? parsed.filter((tag) => typeof tag === 'string') : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const quota = getDailyQuota(req);
   return NextResponse.json(
@@ -79,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (quota.remaining <= 0) {
       const response = NextResponse.json(
         {
-          error: `오늘 생성 한도 ${quota.limit}회를 모두 사용했습니다. 내일 다시 시도해 주세요.`,
+          error: `오늘 생성 시도 ${quota.limit}회를 모두 사용했습니다. 내일 다시 시도해 주세요.`,
           quota,
         },
         { status: 429 },
@@ -94,6 +105,11 @@ export async function POST(req: NextRequest) {
     const templateUrl = formData.get('templateUrl') as string | null;
     const maskDataUrl = formData.get('maskDataUrl') as string | null;
     const size = formData.get('size') as string | null;
+    const countryName = formData.get('countryName') as string | null;
+    const templateTitle = formData.get('templateTitle') as string | null;
+    const templateDescription = formData.get('templateDescription') as string | null;
+    const rawStyleTags = formData.get('styleTags') as string | null;
+    const styleTags = parseStyleTags(rawStyleTags);
 
     if (!file) {
       return NextResponse.json({ error: 'file is required.' }, { status: 400 });
@@ -108,6 +124,13 @@ export async function POST(req: NextRequest) {
     );
 
     const isMaskedFaceSwap = !!templateUrl && !!maskDataUrl;
+    const promptPayload = buildFaceSwapPrompt({
+      basePrompt: prompt ?? undefined,
+      countryName: countryName ?? undefined,
+      templateTitle: templateTitle ?? undefined,
+      templateDescription: templateDescription ?? undefined,
+      styleTags,
+    });
 
     const outputCompression = getOutputCompression();
     const response = isMaskedFaceSwap
@@ -128,7 +151,7 @@ export async function POST(req: NextRequest) {
             model: imageModel,
             image: [templateImageFile, userImageFile],
             mask: maskFile,
-            prompt: buildFaceSwapPrompt(prompt ?? undefined),
+            prompt: promptPayload,
             n: 1,
             size: size || 'auto',
             quality: imageQuality,
@@ -139,7 +162,7 @@ export async function POST(req: NextRequest) {
       : await openai.images.edit({
           model: imageModel,
           image: userImageFile,
-          prompt: buildFaceSwapPrompt(prompt ?? undefined),
+          prompt: promptPayload,
           n: 1,
           size: size || '1024x1024',
           quality: imageQuality,
@@ -154,7 +177,11 @@ export async function POST(req: NextRequest) {
     }
 
     const nextQuota = consumeDailyQuota(req);
-    const usage = (response as { usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } }).usage;
+    const usage = (
+      response as {
+        usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
+      }
+    ).usage;
 
     const json = NextResponse.json(
       {

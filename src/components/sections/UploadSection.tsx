@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country, DailyGenerationQuota, StyleCard } from '@/types';
 
 type Props = {
@@ -209,7 +210,7 @@ export function UploadSection({
               disabled={!uploadedImage || isGenerating || limitReached}
               loading={isGenerating}
               className="w-full"
-              icon={<span className="text-lg">🐾</span>}
+              icon={<CatPawIcon size={18} tone="selected" />}
             >
               내 고양이로 만들기
             </Button>

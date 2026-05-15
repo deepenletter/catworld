@@ -1,21 +1,56 @@
 import type { FaceBox } from '@/types';
 
 export const DEFAULT_FACE_SWAP_PROMPT =
-  'Turn the cat in the template into the same cat from the user reference image. Keep the template pose and scene fixed, but match the user cat face, coat color, fur pattern, markings, and overall identity naturally.';
+  'This must remain the same template image. Keep every template-provided element exactly as it is, keep the template cat in the same role within the scene, and only replace the template cat identity with the user reference cat while preserving the user cat face, breed impression, coat color, and fur markings.';
 
-export function buildFaceSwapPrompt(basePrompt?: string): string {
+type FaceSwapPromptContext = {
+  basePrompt?: string;
+  templateTitle?: string;
+  templateDescription?: string;
+  countryName?: string;
+  styleTags?: string[];
+};
+
+export function buildFaceSwapPrompt({
+  basePrompt,
+  templateTitle,
+  templateDescription,
+  countryName,
+  styleTags,
+}: FaceSwapPromptContext = {}): string {
   const prompt = basePrompt?.trim() || DEFAULT_FACE_SWAP_PROMPT;
+  const templateReferenceParts = [
+    [countryName, templateTitle].filter(Boolean).join(' / '),
+    templateDescription?.trim(),
+    styleTags?.length ? `Template keywords: ${styleTags.join(', ')}` : '',
+  ].filter(Boolean);
 
   return [
     prompt,
     'Use the first image as the fixed template base image.',
     'Use the second image as the cat identity reference.',
-    'Within the masked region, transform the template cat into the reference cat.',
-    'Match the reference cat head shape, ears, eyes, muzzle, nose, coat colors, fur texture, markings, and visible neck or body fur as faithfully as possible.',
-    'The result should look like the same cat from the reference image naturally performing the exact pose from the template image.',
-    'Keep the template pose, body posture, paws, clothing, props, background, camera angle, framing, lighting, and every unmasked region unchanged.',
+    'This is an identity transfer, not a new scene generation.',
+    templateReferenceParts.length
+      ? `Template concept reference: ${templateReferenceParts.join(' | ')}`
+      : '',
+    'Use the template concept reference only to understand the role, styling, mood, and scenario already visible in the template image. Do not invent new scene elements that are not already present in the template.',
+    'Follow this process exactly:',
+    '1. Lock the template image and preserve every visible template-provided element.',
+    '2. Identify what role the template cat is already playing in the template scene and keep that role unchanged.',
+    '3. Transfer only the user cat identity traits into that same template cat.',
+    '4. Return the same template shot with the same concept, but with the user cat replacing only the cat identity.',
+    'Treat the template cat as the pose, action, composition, styling, and concept source.',
+    'Treat the reference cat only as the identity source.',
+    'Within the masked region, change only the cat identity traits: face shape, ear shape, eyes, muzzle, nose, breed impression, coat colors, fur texture, and markings.',
+    'The output cat must keep the exact same pose, body placement, silhouette, viewing direction, limb positioning, tail direction, facial orientation, and relationship to every template-provided element from the template image.',
+    'Any accessory, costume, hat, hood, scarf, clothing, prop, furniture, or scene element that already exists in the template must remain in the same place and look the same in the result.',
+    'The result should feel like the same photo, same template concept, and same cat role, but with the user cat identity transferred onto it.',
+    'Keep the template background, styling, accessories, clothing, props, framing, camera angle, lighting, and every unmasked region unchanged.',
+    'Make the final image crisp, clean, photoreal, and sharp while preserving the original template composition.',
     'Do not create a pasted collage. Blend the identity transfer realistically with the template scene.',
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -29,43 +64,18 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
-function snapToMultipleOf16(value: number): number {
-  return Math.max(16, Math.round(value / 16) * 16);
-}
-
 export function getOpenAIEditSize(width: number, height: number): string {
-  const maxEdge = 1536;
-  const maxAspectRatio = 3;
+  const aspectRatio = width / height;
 
-  let w = width;
-  let h = height;
-
-  const aspectRatio = w / h;
-  if (aspectRatio > maxAspectRatio) {
-    w = h * maxAspectRatio;
-  } else if (1 / aspectRatio > maxAspectRatio) {
-    h = w * maxAspectRatio;
+  if (aspectRatio <= 0.9) {
+    return '1024x1536';
   }
 
-  const scaleDown = Math.min(1, maxEdge / Math.max(w, h));
-  w *= scaleDown;
-  h *= scaleDown;
-
-  let finalW = snapToMultipleOf16(w);
-  let finalH = snapToMultipleOf16(h);
-
-  const minPixels = 655360;
-  const currentPixels = finalW * finalH;
-  if (currentPixels < minPixels) {
-    const scaleUp = Math.sqrt(minPixels / currentPixels);
-    finalW = snapToMultipleOf16(finalW * scaleUp);
-    finalH = snapToMultipleOf16(finalH * scaleUp);
+  if (aspectRatio >= 1.1) {
+    return '1536x1024';
   }
 
-  finalW = Math.min(finalW, 2048);
-  finalH = Math.min(finalH, 2048);
-
-  return `${finalW}x${finalH}`;
+  return '1024x1024';
 }
 
 function eraseEllipse(
@@ -106,16 +116,19 @@ export async function createFaceSwapMaskData(
   const boxHeight = faceBox.hRatio * height;
   const centerX = x + boxWidth / 2;
 
-  const headCenterY = y + boxHeight * 0.42;
-  const neckCenterY = y + boxHeight * 1.2;
-  const bodyCenterY = y + boxHeight * 2.35;
+  const headCenterY = y + boxHeight * 0.4;
+  const neckCenterY = y + boxHeight * 1.02;
+  const chestCenterY = y + boxHeight * 1.72;
+  const torsoCenterY = y + boxHeight * 2.62;
 
-  const headRadiusX = Math.min(boxWidth * 1.05, width * 0.48);
-  const headRadiusY = Math.min(boxHeight * 1.2, height * 0.3);
-  const neckRadiusX = Math.min(boxWidth * 1.45, width * 0.49);
-  const neckRadiusY = Math.min(boxHeight * 1.15, height * 0.28);
-  const bodyRadiusX = Math.min(boxWidth * 1.95, width * 0.49);
-  const bodyRadiusY = Math.min(boxHeight * 2.85, height * 0.49);
+  const headRadiusX = Math.min(boxWidth * 0.98, width * 0.18);
+  const headRadiusY = Math.min(boxHeight * 1.06, height * 0.17);
+  const neckRadiusX = Math.min(boxWidth * 1.12, width * 0.2);
+  const neckRadiusY = Math.min(boxHeight * 0.78, height * 0.12);
+  const chestRadiusX = Math.min(boxWidth * 1.34, width * 0.24);
+  const chestRadiusY = Math.min(boxHeight * 1.42, height * 0.22);
+  const torsoRadiusX = Math.min(boxWidth * 1.08, width * 0.19);
+  const torsoRadiusY = Math.min(boxHeight * 2.05, height * 0.26);
 
   context.save();
   context.globalCompositeOperation = 'destination-out';
@@ -123,7 +136,10 @@ export async function createFaceSwapMaskData(
 
   eraseEllipse(context, centerX, headCenterY, headRadiusX, headRadiusY);
   eraseEllipse(context, centerX, neckCenterY, neckRadiusX, neckRadiusY);
-  eraseEllipse(context, centerX, bodyCenterY, bodyRadiusX, bodyRadiusY);
+  eraseEllipse(context, centerX, chestCenterY, chestRadiusX, chestRadiusY);
+  // Extend through the center of the torso so coat color transfers more naturally
+  // while the untouched outer silhouette helps preserve the template pose.
+  eraseEllipse(context, centerX, torsoCenterY, torsoRadiusX, torsoRadiusY);
 
   context.restore();
 
