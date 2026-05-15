@@ -24,7 +24,7 @@ export function GallerySection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ delay: i * 0.06, duration: 0.5 }}
-              className="group relative rounded-2xl overflow-hidden aspect-square cursor-pointer shadow-card hover:shadow-card-hover transition-shadow duration-300"
+              className="group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-2xl shadow-card transition-shadow duration-300 hover:shadow-card-hover"
             >
               {/* Gradient preview */}
               <div

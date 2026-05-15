@@ -30,7 +30,7 @@ export function StyleCard({ style, isSelected, onSelect, index }: Props) {
       {/* Preview image / gradient */}
       <div
         className={clsx(
-          'relative h-44 sm:h-48 overflow-hidden',
+          'relative aspect-[3/4] overflow-hidden',
           style.image ? 'bg-black' : `bg-gradient-to-br ${style.gradient}`
         )}
       >

@@ -1,5 +1,11 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { parseImageDimensions } from '@/lib/imageDimensions';
+import {
+  buildTemplateAspectRatioError,
+  buildTemplateResolutionHint,
+  isTemplateAspectRatioValid,
+} from '@/lib/templateImage';
 
 export const runtime = 'nodejs';
 
@@ -22,12 +28,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'BLOB_READ_WRITE_TOKEN is not configured.' }, { status: 500 });
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { width, height } = parseImageDimensions(buffer);
+
+    if (!isTemplateAspectRatioValid(width, height)) {
+      return NextResponse.json(
+        { error: buildTemplateAspectRatioError(width, height) },
+        { status: 400 },
+      );
+    }
+
     const blob = await put(`templates/${countrySlug}/${Date.now()}_${file.name}`, file, {
       access: 'public',
       token: blobToken,
     });
 
-    return NextResponse.json({ url: blob.url });
+    return NextResponse.json({
+      url: blob.url,
+      width,
+      height,
+      warning: buildTemplateResolutionHint(width, height),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[upload] error:', message);

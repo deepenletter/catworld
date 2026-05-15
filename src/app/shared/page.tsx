@@ -64,10 +64,10 @@ export default function SharedPage({ searchParams }: SharedPageProps) {
             <img
               src={image}
               alt={title}
-              className="w-full object-cover"
+              className="aspect-[3/4] w-full object-contain"
             />
           ) : (
-            <div className="flex h-[360px] items-center justify-center bg-[#fff2d1] text-sm text-[#8b6d56]">
+            <div className="flex aspect-[3/4] items-center justify-center bg-[#fff2d1] text-sm text-[#8b6d56]">
               공유 이미지를 찾지 못했습니다.
             </div>
           )}

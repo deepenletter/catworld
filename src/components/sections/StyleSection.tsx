@@ -140,7 +140,7 @@ export function StyleSection({ country, selectedStyle, onStyleSelect, onBack }: 
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
-                className="h-40 rounded-2xl bg-gray-200 animate-pulse"
+                className="aspect-[3/4] rounded-2xl bg-gray-200 animate-pulse"
               />
             ))}
           </div>

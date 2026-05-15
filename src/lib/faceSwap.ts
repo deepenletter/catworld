@@ -1,7 +1,20 @@
 import type { FaceBox } from '@/types';
+import { TEMPLATE_OUTPUT_SIZE } from '@/lib/templateImage';
 
-export const DEFAULT_FACE_SWAP_PROMPT =
-  'This must remain the same template image. Keep every template-provided element exactly as it is, keep the template cat in the same role within the scene, and only replace the template cat identity with the user reference cat while preserving the user cat face, breed impression, coat color, and fur markings.';
+const FIXED_FACE_SWAP_RULES = [
+  'This editor must work only from the fixed template base image already provided by the system.',
+  'Never generate a new scene. Never reinterpret the template scene. Never omit any visible template element.',
+  'Treat the selected template image as the locked knowledge image and the only allowed base image for the edit.',
+  'Do not ask for the original template image to be uploaded again. The system-provided template image is already the editing base.',
+  'Absolutely do not change the template composition, camera angle, background, color tone, lighting, steam, texture, water detail, props, costume, accessory, furniture, wood grain, or the cat placement inside the scene.',
+  'Only replace the existing cat in the template image with the cat from the uploaded reference photo.',
+  'Preserve the uploaded cat face shape, fur color, fur pattern, markings, body shape, eyes, nose color, expression mood, and overall identity as faithfully as possible.',
+  'Do not creatively redesign the cat. Do not create a different cat. Do not create a new pose or a new layout.',
+  `Output ratio must remain ${TEMPLATE_OUTPUT_SIZE}. The final image must be ultra-detailed, sharp, photoreal, and look like a real photo edit, not a newly generated image.`,
+  "Highest-priority rule: 'Do not touch anything else. Only replace the cat in the original template photo with the cat from the attached photo. Keep the attached cat\\'s facial features, fur color, fur pattern, and body shape exactly as much as possible.'",
+].join(' ');
+
+export const DEFAULT_FACE_SWAP_PROMPT = FIXED_FACE_SWAP_RULES;
 
 type FaceSwapPromptContext = {
   basePrompt?: string;
@@ -18,7 +31,8 @@ export function buildFaceSwapPrompt({
   countryName,
   styleTags,
 }: FaceSwapPromptContext = {}): string {
-  const prompt = basePrompt?.trim() || DEFAULT_FACE_SWAP_PROMPT;
+  const prompt = DEFAULT_FACE_SWAP_PROMPT;
+  const additionalPrompt = basePrompt?.trim();
   const templateReferenceParts = [
     [countryName, templateTitle].filter(Boolean).join(' / '),
     templateDescription?.trim(),
@@ -27,6 +41,7 @@ export function buildFaceSwapPrompt({
 
   return [
     prompt,
+    additionalPrompt ? `Additional note with lower priority than the fixed rules: ${additionalPrompt}` : '',
     'Use the first image as the fixed template base image.',
     'Use the second image as the cat identity reference.',
     'This is an identity transfer, not a new scene generation.',
@@ -35,19 +50,19 @@ export function buildFaceSwapPrompt({
       : '',
     'Use the template concept reference only to understand the role, styling, mood, and scenario already visible in the template image. Do not invent new scene elements that are not already present in the template.',
     'Follow this process exactly:',
-    '1. Lock the template image and preserve every visible template-provided element.',
-    '2. Identify what role the template cat is already playing in the template scene and keep that role unchanged.',
-    '3. Transfer only the user cat identity traits into that same template cat.',
-    '4. Return the same template shot with the same concept, but with the user cat replacing only the cat identity.',
+    '1. Lock the template image and preserve every visible template-provided element with zero omissions.',
+    '2. Identify the exact cat role, pose, wardrobe, props, and scene relationship already present in the template and keep all of them unchanged.',
+    '3. Transfer only the uploaded cat identity traits into that same existing template cat.',
+    '4. Return the same template shot with the same concept, but with the user cat replacing only the existing cat identity.',
     'Treat the template cat as the pose, action, composition, styling, and concept source.',
     'Treat the reference cat only as the identity source.',
     'Within the masked region, change only the cat identity traits: face shape, ear shape, eyes, muzzle, nose, breed impression, coat colors, fur texture, and markings.',
     'The output cat must keep the exact same pose, body placement, silhouette, viewing direction, limb positioning, tail direction, facial orientation, and relationship to every template-provided element from the template image.',
-    'Any accessory, costume, hat, hood, scarf, clothing, prop, furniture, or scene element that already exists in the template must remain in the same place and look the same in the result.',
-    'The result should feel like the same photo, same template concept, and same cat role, but with the user cat identity transferred onto it.',
+    'Any accessory, costume, hat, hood, scarf, clothing, prop, furniture, water detail, steam detail, background detail, or scene element that already exists in the template must remain in the same place and look the same in the result.',
+    'If any visible template element is missing, altered, re-staged, simplified, or regenerated differently, the result is incorrect.',
+    'The result should feel like the same original template photo, with only the original template cat swapped into the uploaded cat identity.',
     'Keep the template background, styling, accessories, clothing, props, framing, camera angle, lighting, and every unmasked region unchanged.',
-    'Make the final image crisp, clean, photoreal, and sharp while preserving the original template composition.',
-    'Do not create a pasted collage. Blend the identity transfer realistically with the template scene.',
+    'Always make it look like a high-end real photo edit. Never let it look like a newly generated image.',
   ]
     .filter(Boolean)
     .join('\n');
@@ -65,17 +80,9 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 }
 
 export function getOpenAIEditSize(width: number, height: number): string {
-  const aspectRatio = width / height;
-
-  if (aspectRatio <= 0.9) {
-    return '1024x1536';
-  }
-
-  if (aspectRatio >= 1.1) {
-    return '1536x1024';
-  }
-
-  return '1024x1024';
+  void width;
+  void height;
+  return TEMPLATE_OUTPUT_SIZE;
 }
 
 function eraseEllipse(

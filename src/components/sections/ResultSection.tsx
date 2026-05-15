@@ -214,14 +214,13 @@ export function ResultSection({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-3xl overflow-hidden shadow-card-hover mb-6"
+          className="relative mb-6 overflow-hidden rounded-3xl shadow-card-hover"
         >
           {resultImage && (
             <img
               src={resultImage}
               alt="생성된 결과 이미지"
-              className="w-full object-cover"
-              style={{ filter: `hue-rotate(${style ? getHueShift(style.id) : 0}deg) saturate(1.2) brightness(1.05)` }}
+              className="aspect-[3/4] w-full bg-white object-contain"
             />
           )}
 
@@ -232,9 +231,6 @@ export function ResultSection({
             </div>
           )}
 
-          <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm text-white/60 text-[10px] px-2 py-0.5 rounded-full border border-white/10">
-            demo preview
-          </div>
         </motion.div>
 
         {originalImage && (
@@ -263,7 +259,7 @@ export function ResultSection({
                 >
                   <div className="grid grid-cols-2 gap-3">
                     <div className="relative rounded-2xl overflow-hidden">
-                      <img src={originalImage} alt="원본" className="w-full aspect-square object-cover" />
+                      <img src={originalImage} alt="원본" className="aspect-[3/4] w-full bg-white object-contain" />
                       <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
                         원본
                       </div>
@@ -272,8 +268,7 @@ export function ResultSection({
                       <img
                         src={resultImage ?? ''}
                         alt="결과"
-                        className="w-full aspect-square object-cover"
-                        style={{ filter: `hue-rotate(${style ? getHueShift(style.id) : 0}deg) saturate(1.2) brightness(1.05)` }}
+                        className="aspect-[3/4] w-full bg-white object-contain"
                       />
                       <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
                         결과
@@ -445,16 +440,4 @@ export function ResultSection({
       </AnimatePresence>
     </section>
   );
-}
-
-function getHueShift(styleId: string): number {
-  const map: Record<string, number> = {
-    jp_01: -10, jp_02: 30, jp_03: 15, jp_04: -20,
-    fr_01: 10, fr_02: -15, fr_03: 5, fr_04: 20,
-    eg_01: 25, eg_02: 20, eg_03: 0, eg_04: 30,
-    it_01: -5, it_02: -30, it_03: 15, it_04: 10,
-    mx_01: 20, mx_02: 10, mx_03: 25, mx_04: 15,
-    th_01: 22, th_02: -25, th_03: 35, th_04: 10,
-  };
-  return map[styleId] ?? 0;
 }

@@ -11,6 +11,13 @@ import {
   getTemplateGenerationMode,
   normalizeAdminConfig,
 } from '@/lib/adminConfig';
+import {
+  TEMPLATE_RATIO_LABEL,
+  TEMPLATE_RECOMMENDED_MIN_HEIGHT,
+  TEMPLATE_RECOMMENDED_MIN_WIDTH,
+  buildTemplateAspectRatioError,
+  isTemplateAspectRatioValid,
+} from '@/lib/templateImage';
 
 const COUNTRIES: { slug: string; name: string; code: string }[] = [
   { slug: 'japan', name: '일본', code: 'jp' },
@@ -28,6 +35,27 @@ type DrawState = {
   endY: number;
   isDragging: boolean;
 };
+
+function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+      URL.revokeObjectURL(objectUrl);
+      resolve({ width, height });
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to read the template image size.'));
+    };
+
+    image.src = objectUrl;
+  });
+}
 
 type FaceBoxEditorProps = {
   templateUrl: string;
@@ -213,7 +241,7 @@ function TemplateCard({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="relative aspect-video overflow-hidden bg-gray-100">
+      <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={template.url}
@@ -405,11 +433,16 @@ export default function AdminPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const form = new FormData();
-    form.append('file', file);
-    form.append('countrySlug', uploadingFor);
-
     try {
+      const { width, height } = await readImageDimensions(file);
+      if (!isTemplateAspectRatioValid(width, height)) {
+        throw new Error(buildTemplateAspectRatioError(width, height));
+      }
+
+      const form = new FormData();
+      form.append('file', file);
+      form.append('countrySlug', uploadingFor);
+
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         headers: { 'x-admin-pw': password },
@@ -417,6 +450,10 @@ export default function AdminPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? 'Upload failed');
+
+      if (data.warning) {
+        alert(data.warning);
+      }
 
       const newTemplate: AdminTemplate = {
         id: `${uploadingFor}_${Date.now()}`,
@@ -662,6 +699,10 @@ export default function AdminPage() {
                     얼굴 합성 {compositeCount}개 / AI 편집 {aiCount}개
                   </span>
                 )}
+              </p>
+              <p className="mt-1 text-xs text-gray-400">
+                Templates must be {TEMPLATE_RATIO_LABEL}. Recommended minimum resolution:{' '}
+                {TEMPLATE_RECOMMENDED_MIN_WIDTH}x{TEMPLATE_RECOMMENDED_MIN_HEIGHT}
               </p>
             </div>
           </div>

@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const imageModel = process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2';
 const imageQuality = (
-  process.env.OPENAI_IMAGE_QUALITY ?? 'medium'
+  process.env.OPENAI_IMAGE_QUALITY ?? 'high'
 ) as 'low' | 'medium' | 'high' | 'auto';
 const outputFormat = (process.env.OPENAI_IMAGE_OUTPUT_FORMAT ?? 'jpeg') as 'png' | 'jpeg' | 'webp';
 
