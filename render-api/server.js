@@ -137,12 +137,21 @@ app.post('/generate', upload.single('file'), async (req, res) => {
     const imageFile = await toFile(file.buffer, `reference.${ext}`, { type: mimeType });
 
     const isMaskedFaceSwap = Boolean(templateUrl && maskDataUrl);
+    const isUnmaskedFaceSwap = Boolean(templateUrl && !maskDataUrl);
+
+    const editParams = {
+      model: imageModel,
+      prompt: buildFaceSwapPrompt(prompt, req.body),
+      n: 1,
+      quality: imageQuality,
+      output_format: outputFormat,
+      ...(outputCompression !== undefined ? { output_compression: outputCompression } : {}),
+    };
 
     const response = isMaskedFaceSwap
       ? await (async () => {
           const remoteTemplate = await fetchRemoteFile(templateUrl);
           const maskFileData = parseDataUrl(maskDataUrl);
-
           const templateImageFile = await toFile(
             remoteTemplate.buffer,
             `template.${getExtensionFromMimeType(remoteTemplate.mimeType)}`,
@@ -151,28 +160,32 @@ app.post('/generate', upload.single('file'), async (req, res) => {
           const maskFile = await toFile(maskFileData.buffer, 'mask.png', {
             type: maskFileData.mimeType || 'image/png',
           });
-
           return openai.images.edit({
-            model: imageModel,
+            ...editParams,
             image: [templateImageFile, imageFile],
             mask: maskFile,
-            prompt: buildFaceSwapPrompt(prompt, req.body),
-            n: 1,
             size: size || 'auto',
-            quality: imageQuality,
-            output_format: outputFormat,
-            ...(outputCompression !== undefined ? { output_compression: outputCompression } : {}),
+          });
+        })()
+      : isUnmaskedFaceSwap
+      ? await (async () => {
+          // 마스크 없이 template + 사용자 고양이 두 장을 함께 전달
+          const remoteTemplate = await fetchRemoteFile(templateUrl);
+          const templateImageFile = await toFile(
+            remoteTemplate.buffer,
+            `template.${getExtensionFromMimeType(remoteTemplate.mimeType)}`,
+            { type: remoteTemplate.mimeType },
+          );
+          return openai.images.edit({
+            ...editParams,
+            image: [templateImageFile, imageFile],
+            size: size || '1024x1024',
           });
         })()
       : await openai.images.edit({
-          model: imageModel,
+          ...editParams,
           image: imageFile,
-          prompt: buildFaceSwapPrompt(prompt, req.body),
-          n: 1,
           size: size || '1024x1024',
-          quality: imageQuality,
-          output_format: outputFormat,
-          ...(outputCompression !== undefined ? { output_compression: outputCompression } : {}),
         });
 
     const b64 = response.data?.[0]?.b64_json;

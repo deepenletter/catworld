@@ -194,13 +194,6 @@ export function useAppState() {
     }
 
     if (adminTemplate && generationMode === 'ai') {
-      if (!adminTemplate.faceBox) {
-        setError('AI 고양이 편집에는 템플릿 기준 영역 설정이 필요합니다.');
-        setPhase('style_selected');
-        setIsGenerating(false);
-        return;
-      }
-
       try {
         let progress = 0;
         const timer = setInterval(() => {
@@ -208,22 +201,25 @@ export function useAppState() {
           setGenerationProgress(Math.round(progress));
         }, 600);
 
-        const { maskDataUrl, size } = await createFaceSwapMaskData(
-          adminTemplate.url,
-          adminTemplate.faceBox,
-        );
-
         const form = new FormData();
         form.append('file', uploadedFile);
         form.append('templateUrl', adminTemplate.url);
-        form.append('maskDataUrl', maskDataUrl);
-        form.append('size', size);
         form.append('countryName', selectedCountry.name);
         form.append('templateTitle', selectedStyle.title);
         form.append('templateDescription', selectedStyle.description);
         form.append('styleTags', JSON.stringify(selectedStyle.tags ?? []));
         if (adminTemplate.prompt.trim()) {
           form.append('prompt', adminTemplate.prompt.trim());
+        }
+
+        // faceBox가 있으면 마스크 생성 → 더 정밀한 교체
+        if (adminTemplate.faceBox) {
+          const { maskDataUrl, size } = await createFaceSwapMaskData(
+            adminTemplate.url,
+            adminTemplate.faceBox,
+          );
+          form.append('maskDataUrl', maskDataUrl);
+          form.append('size', size);
         }
 
         const base = process.env.NEXT_PUBLIC_GENERATE_API_URL;
