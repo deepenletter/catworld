@@ -29,14 +29,12 @@ function CloudLayer() {
   const cloudTexture = useTexture('/earth_clouds.png');
 
   useFrame((_, delta) => {
-    if (cloudRef.current) {
-      cloudRef.current.rotation.y += delta * 0.018;
-    }
+    if (cloudRef.current) cloudRef.current.rotation.y += delta * 0.018;
   });
 
   return (
     <mesh ref={cloudRef} scale={1.012}>
-      <sphereGeometry args={[1, 64, 64]} />
+      <sphereGeometry args={[1, 32, 32]} />
       <meshPhongMaterial
         map={cloudTexture}
         alphaMap={cloudTexture}
@@ -60,7 +58,7 @@ function EarthGlobe() {
     <>
       {/* Earth surface */}
       <mesh>
-        <sphereGeometry args={[1, 128, 128]} />
+        <sphereGeometry args={[1, 48, 48]} />
         <meshPhongMaterial
           map={dayMap}
           normalMap={normalMap}
@@ -85,12 +83,11 @@ function EarthGlobe() {
 function TwinklingStars() {
   const r0 = useRef<THREE.Points>(null);
   const r1 = useRef<THREE.Points>(null);
-  const r2 = useRef<THREE.Points>(null);
-  const refs = [r0, r1, r2];
+  const refs = [r0, r1];
 
-  const groups = useMemo(() => [0, 1, 2].map(() => {
-    const arr = new Float32Array(320 * 3);
-    for (let i = 0; i < 320; i++) {
+  const groups = useMemo(() => [0, 1].map(() => {
+    const arr = new Float32Array(150 * 3);
+    for (let i = 0; i < 150; i++) {
       const r = 5 + Math.random() * 14;
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(2 * Math.random() - 1);
@@ -122,7 +119,7 @@ function TwinklingStars() {
           </bufferGeometry>
           <pointsMaterial
             color={new THREE.Color(1.0, 0.97, 0.88)}
-            size={0.015 + i * 0.006}
+            size={0.018 + i * 0.007}
             transparent
             opacity={0.7}
             sizeAttenuation
@@ -214,7 +211,7 @@ function CountryMarker({
               padding: '4px 8px',
               borderRadius: 8,
               border: '1px solid rgba(245,197,24,0.45)',
-              backdropFilter: 'blur(6px)',
+              backdropFilter: 'none',
               whiteSpace: 'nowrap',
               marginTop: 2,
             }}>
@@ -400,9 +397,10 @@ export function CatGlobe3D({
     <div className="relative w-full h-full">
       <Canvas
         camera={{ position: [0, 0.3, 2.9], fov: 50 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
         style={{ background: 'transparent', touchAction: 'none' }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
+        performance={{ min: 0.5 }}
       >
         <Scene
           countries={countries}
