@@ -197,9 +197,10 @@ export function useAppState() {
       try {
         let progress = 0;
         const timer = setInterval(() => {
-          progress = Math.min(progress + 1.5, 88);
-          setGenerationProgress(Math.round(progress));
-        }, 600);
+          // asymptotic approach toward 96 — always moves, never reaches
+          progress += (96 - progress) * 0.028;
+          setGenerationProgress(Math.round(Math.min(progress, 96)));
+        }, 700);
 
         const form = new FormData();
         form.append('file', uploadedFile);
