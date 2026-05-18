@@ -181,7 +181,7 @@ function CountryMarker({
               ? 'drop-shadow(0 0 6px rgba(245,197,24,1)) drop-shadow(0 0 12px rgba(245,197,24,0.6))'
               : isHovered
               ? 'drop-shadow(0 0 4px rgba(255,240,80,0.9))'
-              : 'drop-shadow(0 0 4px rgba(255,255,255,0.9)) drop-shadow(0 0 8px rgba(255,255,255,0.5))',
+              : 'drop-shadow(0 0 4px rgba(245,197,24,0.8)) drop-shadow(0 0 8px rgba(245,197,24,0.4))',
             cursor: 'pointer',
           }}>
             <CatPawIcon
