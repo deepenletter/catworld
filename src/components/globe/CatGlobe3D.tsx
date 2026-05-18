@@ -174,18 +174,32 @@ function CountryMarker({
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
         >
           <span style={{
-            display: 'block',
-            transition: 'transform 0.15s ease',
-            transform: isSelected ? 'scale(1.55)' : isHovered ? 'scale(1.28)' : 'scale(1)',
-            filter: isSelected
-              ? 'drop-shadow(0 0 6px rgba(245,197,24,1)) drop-shadow(0 0 12px rgba(245,197,24,0.6))'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: isSelected ? 42 : isHovered ? 38 : 34,
+            height: isSelected ? 42 : isHovered ? 38 : 34,
+            borderRadius: '50%',
+            background: isSelected
+              ? 'rgba(245,197,24,0.25)'
               : isHovered
-              ? 'drop-shadow(0 0 4px rgba(255,240,80,0.9))'
-              : 'drop-shadow(0 0 4px rgba(245,197,24,0.8)) drop-shadow(0 0 8px rgba(245,197,24,0.4))',
+              ? 'rgba(245,197,24,0.18)'
+              : 'rgba(20,14,0,0.72)',
+            border: isSelected
+              ? '2px solid rgba(245,197,24,0.95)'
+              : isHovered
+              ? '1.5px solid rgba(245,197,24,0.8)'
+              : '1.5px solid rgba(245,197,24,0.55)',
+            boxShadow: isSelected
+              ? '0 0 10px rgba(245,197,24,0.8), 0 0 20px rgba(245,197,24,0.4)'
+              : isHovered
+              ? '0 0 8px rgba(245,197,24,0.6)'
+              : '0 0 6px rgba(245,197,24,0.3)',
+            transition: 'all 0.15s ease',
             cursor: 'pointer',
           }}>
             <CatPawIcon
-              size={isSelected ? 26 : isHovered ? 23 : 20}
+              size={isSelected ? 24 : isHovered ? 21 : 18}
               tone={isSelected ? 'selected' : isHovered ? 'hovered' : 'default'}
             />
           </span>
