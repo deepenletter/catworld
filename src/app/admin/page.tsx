@@ -26,6 +26,7 @@ const COUNTRIES: { slug: string; name: string; code: string }[] = [
   { slug: 'italy', name: '이탈리아', code: 'it' },
   { slug: 'mexico', name: '멕시코', code: 'mx' },
   { slug: 'thailand', name: '태국', code: 'th' },
+  { slug: 'china', name: '중국', code: 'cn' },
 ];
 
 type DrawState = {
