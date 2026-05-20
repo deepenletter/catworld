@@ -548,7 +548,7 @@ export default function AdminPage() {
     setSaveStatus('saving');
     try {
       const payload = {
-        _meta: { enabledCountrySlugs: [...enabledSlugs] },
+        _meta: { enabledCountrySlugs: Array.from(enabledSlugs) },
         ...config,
       };
       const response = await fetch('/api/admin/config', {
