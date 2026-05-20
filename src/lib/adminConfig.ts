@@ -59,6 +59,15 @@ export function normalizeAdminTemplate(
   return normalized;
 }
 
+export function extractEnabledCountrySlugs(value: unknown): string[] | null {
+  if (!value || typeof value !== 'object') return null;
+  const meta = (value as Record<string, unknown>)._meta;
+  if (!meta || typeof meta !== 'object') return null;
+  const slugs = (meta as Record<string, unknown>).enabledCountrySlugs;
+  if (!Array.isArray(slugs)) return null;
+  return slugs.filter((s): s is string => typeof s === 'string');
+}
+
 export function normalizeAdminConfig(value: unknown): AdminCountryConfig {
   if (!value || typeof value !== 'object') return {};
 

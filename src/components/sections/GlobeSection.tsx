@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import { countries } from '@/data/countries';
+import { extractEnabledCountrySlugs } from '@/lib/adminConfig';
 
 const SPARKLES: [number, number, number, number][] = [
   [4, 8, 2.1, 0], [12, 3, 1.7, 0.4], [19, 14, 2.4, 0.8], [28, 5, 1.9, 0.2], [36, 10, 2.6, 1.0],
@@ -40,6 +42,20 @@ type Props = {
 };
 
 export function GlobeSection({ onCountrySelect }: Props) {
+  const [activeCountries, setActiveCountries] = useState<Country[]>(countries);
+
+  useEffect(() => {
+    fetch('/api/admin/config', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        const slugs = extractEnabledCountrySlugs(data);
+        if (slugs && slugs.length > 0) {
+          setActiveCountries(countries.filter((c) => slugs.includes(c.slug)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section
       className="relative h-screen overflow-hidden"
@@ -74,7 +90,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
 
       <div className="absolute inset-0 z-10">
         <div className="h-full w-full">
-          <CatGlobe3D countries={countries} onCountrySelect={onCountrySelect} />
+          <CatGlobe3D countries={activeCountries} onCountrySelect={onCountrySelect} />
         </div>
       </div>
 
@@ -108,7 +124,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
             지구본이 불편하면 아래 나라 버튼으로 바로 이동할 수 있어요.
           </p>
           <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
-            {countries.map((country, index) => (
+            {activeCountries.map((country, index) => (
               <motion.button
                 key={country.slug}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -135,7 +151,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
         <div className="hidden md:block">
           <p className="mb-3 text-center text-xs text-white/28">또는 아래에서 직접 선택</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {countries.map((country) => (
+            {activeCountries.map((country) => (
               <button
                 key={country.slug}
                 onClick={() => onCountrySelect(country)}

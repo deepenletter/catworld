@@ -8,6 +8,7 @@ import type {
   TemplateGenerationMode,
 } from '@/types';
 import {
+  extractEnabledCountrySlugs,
   getTemplateGenerationMode,
   normalizeAdminConfig,
 } from '@/lib/adminConfig';
@@ -397,6 +398,9 @@ export default function AdminPage() {
 
   const [password, setPassword] = useState('');
   const [config, setConfig] = useState<AdminCountryConfig>({});
+  const [enabledSlugs, setEnabledSlugs] = useState<Set<string>>(
+    new Set(COUNTRIES.map((c) => c.slug)),
+  );
   const [activeCountry, setActiveCountry] = useState<string>(COUNTRIES[0].slug);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [editingFaceBox, setEditingFaceBox] = useState<{
@@ -414,6 +418,12 @@ export default function AdminPage() {
       const response = await fetch('/api/admin/config');
       if (!response.ok) return;
       const data = await response.json();
+      const rawSlugs = extractEnabledCountrySlugs(data);
+      if (rawSlugs) {
+        setEnabledSlugs(new Set(rawSlugs));
+      } else {
+        setEnabledSlugs(new Set(COUNTRIES.map((c) => c.slug)));
+      }
       setConfig(normalizeAdminConfig(data));
     } catch {
       // ignore
@@ -537,13 +547,17 @@ export default function AdminPage() {
   const saveConfig = async () => {
     setSaveStatus('saving');
     try {
+      const payload = {
+        _meta: { enabledCountrySlugs: [...enabledSlugs] },
+        ...config,
+      };
       const response = await fetch('/api/admin/config', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'x-admin-pw': password,
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? 'Save failed');
@@ -669,6 +683,52 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-8">
+        {/* 나라 표시 설정 */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-1 text-sm font-bold text-gray-800">지구본 나라 표시 설정</h2>
+          <p className="mb-4 text-xs text-gray-500">
+            체크 해제된 나라는 지구본과 목록에서 숨겨집니다. 저장 후 즉시 반영됩니다.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {COUNTRIES.map((country) => {
+              const enabled = enabledSlugs.has(country.slug);
+              return (
+                <button
+                  key={country.slug}
+                  onClick={() => {
+                    setEnabledSlugs((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(country.slug)) {
+                        next.delete(country.slug);
+                      } else {
+                        next.add(country.slug);
+                      }
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
+                    enabled
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                      : 'border-gray-200 bg-gray-100 text-gray-400 line-through'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://flagcdn.com/w40/${country.code}.png`}
+                    alt=""
+                    className={`h-4 w-auto rounded-sm ${enabled ? '' : 'opacity-30'}`}
+                  />
+                  <span>{country.name}</span>
+                  <span className={`text-xs ${enabled ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    {enabled ? '표시' : '숨김'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 나라별 템플릿 탭 */}
         <div className="mb-8 flex flex-wrap gap-2">
           {COUNTRIES.map((country) => {
             const count = (config[country.slug] ?? []).length;
