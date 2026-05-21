@@ -8,9 +8,11 @@ import type {
   TemplateGenerationMode,
 } from '@/types';
 import {
+  extractCustomCountries,
   extractEnabledCountrySlugs,
   getTemplateGenerationMode,
   normalizeAdminConfig,
+  type CustomCountryData,
 } from '@/lib/adminConfig';
 import {
   TEMPLATE_RATIO_LABEL,
@@ -19,6 +21,63 @@ import {
   buildTemplateAspectRatioError,
   isTemplateAspectRatioValid,
 } from '@/lib/templateImage';
+
+const COUNTRY_PRESETS: { name: string; nameEn: string; code: string; lat: number; lng: number }[] = [
+  { name: '한국', nameEn: 'Korea', code: 'kr', lat: 37.5, lng: 127.0 },
+  { name: '미국', nameEn: 'United States', code: 'us', lat: 38.9, lng: -77.0 },
+  { name: '영국', nameEn: 'United Kingdom', code: 'gb', lat: 51.5, lng: -0.1 },
+  { name: '독일', nameEn: 'Germany', code: 'de', lat: 51.2, lng: 10.5 },
+  { name: '스페인', nameEn: 'Spain', code: 'es', lat: 40.4, lng: -3.7 },
+  { name: '그리스', nameEn: 'Greece', code: 'gr', lat: 39.1, lng: 21.8 },
+  { name: '터키', nameEn: 'Turkey', code: 'tr', lat: 39.9, lng: 32.9 },
+  { name: '인도', nameEn: 'India', code: 'in', lat: 20.6, lng: 79.0 },
+  { name: '호주', nameEn: 'Australia', code: 'au', lat: -25.3, lng: 133.8 },
+  { name: '캐나다', nameEn: 'Canada', code: 'ca', lat: 56.1, lng: -106.3 },
+  { name: '브라질', nameEn: 'Brazil', code: 'br', lat: -14.2, lng: -51.9 },
+  { name: '아르헨티나', nameEn: 'Argentina', code: 'ar', lat: -38.4, lng: -63.6 },
+  { name: '러시아', nameEn: 'Russia', code: 'ru', lat: 55.8, lng: 37.6 },
+  { name: '베트남', nameEn: 'Vietnam', code: 'vn', lat: 14.1, lng: 108.3 },
+  { name: '인도네시아', nameEn: 'Indonesia', code: 'id', lat: -0.8, lng: 113.9 },
+  { name: '싱가포르', nameEn: 'Singapore', code: 'sg', lat: 1.3, lng: 103.8 },
+  { name: '말레이시아', nameEn: 'Malaysia', code: 'my', lat: 4.2, lng: 108.0 },
+  { name: '필리핀', nameEn: 'Philippines', code: 'ph', lat: 12.9, lng: 121.8 },
+  { name: '포르투갈', nameEn: 'Portugal', code: 'pt', lat: 38.7, lng: -9.1 },
+  { name: '네덜란드', nameEn: 'Netherlands', code: 'nl', lat: 52.1, lng: 5.3 },
+  { name: '스위스', nameEn: 'Switzerland', code: 'ch', lat: 46.8, lng: 8.2 },
+  { name: '오스트리아', nameEn: 'Austria', code: 'at', lat: 47.8, lng: 13.0 },
+  { name: '스웨덴', nameEn: 'Sweden', code: 'se', lat: 59.3, lng: 18.1 },
+  { name: '노르웨이', nameEn: 'Norway', code: 'no', lat: 59.9, lng: 10.7 },
+  { name: '덴마크', nameEn: 'Denmark', code: 'dk', lat: 55.7, lng: 12.6 },
+  { name: '핀란드', nameEn: 'Finland', code: 'fi', lat: 60.2, lng: 24.9 },
+  { name: '체코', nameEn: 'Czech Republic', code: 'cz', lat: 50.1, lng: 14.4 },
+  { name: '헝가리', nameEn: 'Hungary', code: 'hu', lat: 47.5, lng: 19.0 },
+  { name: '폴란드', nameEn: 'Poland', code: 'pl', lat: 52.2, lng: 21.0 },
+  { name: '모로코', nameEn: 'Morocco', code: 'ma', lat: 33.9, lng: -6.9 },
+  { name: '남아프리카', nameEn: 'South Africa', code: 'za', lat: -25.7, lng: 28.2 },
+  { name: '케냐', nameEn: 'Kenya', code: 'ke', lat: -1.3, lng: 36.8 },
+  { name: '나이지리아', nameEn: 'Nigeria', code: 'ng', lat: 9.1, lng: 7.4 },
+  { name: '페루', nameEn: 'Peru', code: 'pe', lat: -9.2, lng: -75.0 },
+  { name: '콜롬비아', nameEn: 'Colombia', code: 'co', lat: 4.7, lng: -74.1 },
+  { name: '뉴질랜드', nameEn: 'New Zealand', code: 'nz', lat: -41.3, lng: 174.8 },
+  { name: '이란', nameEn: 'Iran', code: 'ir', lat: 35.7, lng: 51.4 },
+  { name: '이스라엘', nameEn: 'Israel', code: 'il', lat: 31.8, lng: 35.2 },
+  { name: '사우디아라비아', nameEn: 'Saudi Arabia', code: 'sa', lat: 24.7, lng: 46.7 },
+  { name: '아랍에미리트', nameEn: 'UAE', code: 'ae', lat: 24.5, lng: 54.4 },
+  { name: '칠레', nameEn: 'Chile', code: 'cl', lat: -33.5, lng: -70.6 },
+  { name: '대만', nameEn: 'Taiwan', code: 'tw', lat: 25.0, lng: 121.5 },
+  { name: '홍콩', nameEn: 'Hong Kong', code: 'hk', lat: 22.3, lng: 114.2 },
+  { name: '파키스탄', nameEn: 'Pakistan', code: 'pk', lat: 33.7, lng: 73.1 },
+  { name: '방글라데시', nameEn: 'Bangladesh', code: 'bd', lat: 23.7, lng: 90.4 },
+  { name: '스리랑카', nameEn: 'Sri Lanka', code: 'lk', lat: 7.9, lng: 80.8 },
+  { name: '캄보디아', nameEn: 'Cambodia', code: 'kh', lat: 11.6, lng: 104.9 },
+  { name: '미얀마', nameEn: 'Myanmar', code: 'mm', lat: 19.7, lng: 96.1 },
+  { name: '우크라이나', nameEn: 'Ukraine', code: 'ua', lat: 50.4, lng: 30.5 },
+  { name: '루마니아', nameEn: 'Romania', code: 'ro', lat: 44.4, lng: 26.1 },
+  { name: '벨기에', nameEn: 'Belgium', code: 'be', lat: 50.8, lng: 4.4 },
+  { name: '아이슬란드', nameEn: 'Iceland', code: 'is', lat: 64.1, lng: -21.9 },
+  { name: '쿠바', nameEn: 'Cuba', code: 'cu', lat: 23.1, lng: -82.4 },
+  { name: '에티오피아', nameEn: 'Ethiopia', code: 'et', lat: 9.0, lng: 38.7 },
+];
 
 const COUNTRIES: { slug: string; name: string; code: string }[] = [
   { slug: 'japan', name: '일본', code: 'jp' },
@@ -401,6 +460,8 @@ export default function AdminPage() {
   const [enabledSlugs, setEnabledSlugs] = useState<Set<string>>(
     new Set(COUNTRIES.map((c) => c.slug)),
   );
+  const [customCountries, setCustomCountries] = useState<CustomCountryData[]>([]);
+  const [newForm, setNewForm] = useState({ name: '', nameEn: '', code: '', lat: '', lng: '' });
   const [activeCountry, setActiveCountry] = useState<string>(COUNTRIES[0].slug);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [editingFaceBox, setEditingFaceBox] = useState<{
@@ -419,10 +480,16 @@ export default function AdminPage() {
       if (!response.ok) return;
       const data = await response.json();
       const rawSlugs = extractEnabledCountrySlugs(data);
+      const rawCustom = extractCustomCountries(data);
+      setCustomCountries(rawCustom);
       if (rawSlugs) {
         setEnabledSlugs(new Set(rawSlugs));
       } else {
-        setEnabledSlugs(new Set(COUNTRIES.map((c) => c.slug)));
+        const allSlugs = [
+          ...COUNTRIES.map((c) => c.slug),
+          ...rawCustom.map((c) => c.slug),
+        ];
+        setEnabledSlugs(new Set(allSlugs));
       }
       setConfig(normalizeAdminConfig(data));
     } catch {
@@ -548,7 +615,10 @@ export default function AdminPage() {
     setSaveStatus('saving');
     try {
       const payload = {
-        _meta: { enabledCountrySlugs: Array.from(enabledSlugs) },
+        _meta: {
+          enabledCountrySlugs: Array.from(enabledSlugs),
+          customCountries,
+        },
         ...config,
       };
       const response = await fetch('/api/admin/config', {
@@ -616,7 +686,11 @@ export default function AdminPage() {
   }
 
   const activeTemplates = config[activeCountry] ?? [];
-  const activeCountryInfo = COUNTRIES.find((country) => country.slug === activeCountry)!;
+  const allAdminCountries = [
+    ...COUNTRIES,
+    ...customCountries.map((c) => ({ slug: c.slug, name: c.name, code: c.code })),
+  ];
+  const activeCountryInfo = allAdminCountries.find((country) => country.slug === activeCountry) ?? COUNTRIES[0];;
   const compositeCount = activeTemplates.filter(
     (template) => getTemplateGenerationMode(template) === 'composite',
   ).length;
@@ -690,7 +764,7 @@ export default function AdminPage() {
             체크 해제된 나라는 지구본과 목록에서 숨겨집니다. 저장 후 즉시 반영됩니다.
           </p>
           <div className="flex flex-wrap gap-3">
-            {COUNTRIES.map((country) => {
+            {[...COUNTRIES, ...customCountries.map((c) => ({ slug: c.slug, name: c.name, code: c.code }))].map((country) => {
               const enabled = enabledSlugs.has(country.slug);
               return (
                 <button
@@ -728,9 +802,161 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* 나라 추가 */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-1 text-sm font-bold text-gray-800">나라 추가</h2>
+          <p className="mb-4 text-xs text-gray-500">
+            아래에서 나라를 선택하거나 직접 입력해 지구본에 추가하세요. 저장 버튼을 눌러야 반영됩니다.
+          </p>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-500">빠른 선택 (자동 입력)</label>
+              <select
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value=""
+                onChange={(e) => {
+                  const preset = COUNTRY_PRESETS.find((p) => p.code === e.target.value);
+                  if (preset) {
+                    setNewForm({
+                      name: preset.name,
+                      nameEn: preset.nameEn,
+                      code: preset.code,
+                      lat: String(preset.lat),
+                      lng: String(preset.lng),
+                    });
+                  }
+                }}
+              >
+                <option value="">-- 나라 선택 --</option>
+                {COUNTRY_PRESETS.map((p) => (
+                  <option key={p.code} value={p.code}>{p.name} ({p.code.toUpperCase()})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs font-semibold text-gray-500">나라명 (한국어)</label>
+                <input
+                  type="text"
+                  value={newForm.name}
+                  onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="예: 한국"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div style={{ width: 80 }}>
+                <label className="mb-1 block text-xs font-semibold text-gray-500">ISO 코드</label>
+                <input
+                  type="text"
+                  value={newForm.code}
+                  onChange={(e) => setNewForm((f) => ({ ...f, code: e.target.value.toLowerCase().slice(0, 2) }))}
+                  placeholder="kr"
+                  maxLength={2}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {newForm.code.length === 2 && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`https://flagcdn.com/w40/${newForm.code}.png`}
+                  alt=""
+                  className="mb-0.5 h-8 w-auto rounded-sm shadow-sm"
+                />
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-500">위도 (Latitude)</label>
+              <input
+                type="number"
+                value={newForm.lat}
+                onChange={(e) => setNewForm((f) => ({ ...f, lat: e.target.value }))}
+                placeholder="예: 37.5"
+                step="0.1"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-500">경도 (Longitude)</label>
+              <input
+                type="number"
+                value={newForm.lng}
+                onChange={(e) => setNewForm((f) => ({ ...f, lng: e.target.value }))}
+                placeholder="예: 127.0"
+                step="0.1"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const lat = parseFloat(newForm.lat);
+              const lng = parseFloat(newForm.lng);
+              if (!newForm.name.trim() || newForm.code.length !== 2 || isNaN(lat) || isNaN(lng)) {
+                alert('나라명, ISO 코드(2자리), 위도, 경도를 모두 입력해 주세요.');
+                return;
+              }
+              const slug = newForm.code.toLowerCase();
+              const all = [...COUNTRIES.map((c) => c.slug), ...customCountries.map((c) => c.slug)];
+              if (all.includes(slug)) {
+                alert(`이미 존재하는 나라 코드입니다 (${slug}). 다른 코드를 사용하세요.`);
+                return;
+              }
+              const entry: CustomCountryData = {
+                slug,
+                name: newForm.name.trim(),
+                nameEn: newForm.nameEn.trim() || newForm.code.toUpperCase(),
+                code: slug,
+                lat,
+                lng,
+              };
+              setCustomCountries((prev) => [...prev, entry]);
+              setEnabledSlugs((prev) => new Set([...Array.from(prev), slug]));
+              setNewForm({ name: '', nameEn: '', code: '', lat: '', lng: '' });
+            }}
+            className="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            + 나라 추가
+          </button>
+
+          {customCountries.length > 0 && (
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <p className="mb-2 text-xs font-semibold text-gray-500">추가된 나라</p>
+              <div className="flex flex-wrap gap-2">
+                {customCountries.map((c) => (
+                  <div
+                    key={c.slug}
+                    className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`https://flagcdn.com/w40/${c.code}.png`} alt="" className="h-4 w-auto rounded-sm" />
+                    <span className="text-sm font-medium text-blue-800">{c.name}</span>
+                    <button
+                      onClick={() => {
+                        setCustomCountries((prev) => prev.filter((x) => x.slug !== c.slug));
+                        setEnabledSlugs((prev) => {
+                          const next = new Set(prev);
+                          next.delete(c.slug);
+                          return next;
+                        });
+                      }}
+                      className="text-blue-400 hover:text-red-500 transition-colors text-sm leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* 나라별 템플릿 탭 */}
         <div className="mb-8 flex flex-wrap gap-2">
-          {COUNTRIES.map((country) => {
+          {[...COUNTRIES, ...customCountries.map((c) => ({ slug: c.slug, name: c.name, code: c.code }))].map((country) => {
             const count = (config[country.slug] ?? []).length;
             return (
               <button

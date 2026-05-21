@@ -59,6 +59,33 @@ export function normalizeAdminTemplate(
   return normalized;
 }
 
+export type CustomCountryData = {
+  slug: string;
+  name: string;
+  nameEn: string;
+  code: string;
+  lat: number;
+  lng: number;
+};
+
+export function extractCustomCountries(value: unknown): CustomCountryData[] {
+  if (!value || typeof value !== 'object') return [];
+  const meta = (value as Record<string, unknown>)._meta;
+  if (!meta || typeof meta !== 'object') return [];
+  const list = (meta as Record<string, unknown>).customCountries;
+  if (!Array.isArray(list)) return [];
+  return list.filter(
+    (c): c is CustomCountryData =>
+      !!c &&
+      typeof c === 'object' &&
+      typeof (c as CustomCountryData).slug === 'string' &&
+      typeof (c as CustomCountryData).name === 'string' &&
+      typeof (c as CustomCountryData).code === 'string' &&
+      typeof (c as CustomCountryData).lat === 'number' &&
+      typeof (c as CustomCountryData).lng === 'number',
+  );
+}
+
 export function extractEnabledCountrySlugs(value: unknown): string[] | null {
   if (!value || typeof value !== 'object') return null;
   const meta = (value as Record<string, unknown>)._meta;

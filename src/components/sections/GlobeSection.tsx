@@ -6,7 +6,22 @@ import { motion } from 'framer-motion';
 import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import { countries } from '@/data/countries';
-import { extractEnabledCountrySlugs } from '@/lib/adminConfig';
+import { extractCustomCountries, extractEnabledCountrySlugs, type CustomCountryData } from '@/lib/adminConfig';
+
+function customToCountry(c: CustomCountryData) {
+  return {
+    slug: c.slug,
+    name: c.name,
+    nameEn: c.nameEn,
+    emoji: '',
+    code: c.code,
+    lat: c.lat,
+    lng: c.lng,
+    accentColor: '#D97706',
+    description: '',
+    styles: [] as never[],
+  };
+}
 
 const SPARKLES: [number, number, number, number][] = [
   [4, 8, 2.1, 0], [12, 3, 1.7, 0.4], [19, 14, 2.4, 0.8], [28, 5, 1.9, 0.2], [36, 10, 2.6, 1.0],
@@ -48,9 +63,13 @@ export function GlobeSection({ onCountrySelect }: Props) {
     fetch('/api/admin/config', { cache: 'no-store' })
       .then((r) => r.json())
       .then((data: unknown) => {
+        const custom = extractCustomCountries(data).map(customToCountry);
+        const all = [...countries, ...custom];
         const slugs = extractEnabledCountrySlugs(data);
         if (slugs && slugs.length > 0) {
-          setActiveCountries(countries.filter((c) => slugs.includes(c.slug)));
+          setActiveCountries(all.filter((c) => slugs.includes(c.slug)));
+        } else if (custom.length > 0) {
+          setActiveCountries(all);
         }
       })
       .catch(() => {});
