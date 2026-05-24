@@ -70,9 +70,7 @@ export function HeroSection({ onStart }: Props) {
           variants={fadeUp}
           className="font-display text-5xl sm:text-6xl md:text-7xl font-bold text-warm-900 dark:text-warm-50 leading-[1.08] mb-5"
         >
-          우리집 고양이,
-          <br />
-          <span className="text-primary">세계 여행</span> 떠나다
+          어디로 떠날까냥?
         </motion.h1>
 
         <motion.p
@@ -82,9 +80,7 @@ export function HeroSection({ onStart }: Props) {
           variants={fadeUp}
           className="text-lg sm:text-xl text-warm-600 dark:text-warm-300 max-w-xl leading-relaxed mb-10"
         >
-          나라를 고르면 당신의 고양이가 그 나라 감성으로 변신합니다.
-          <br className="hidden sm:block" />
-          얼굴은 그대로, 스타일만 바뀌는 마법 같은 경험.
+          원하는 나라를 선택하라옹
         </motion.p>
 
         {/* CTA buttons */}
