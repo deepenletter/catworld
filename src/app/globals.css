@@ -87,6 +87,14 @@ canvas[data-engine]:active {
   background: transparent !important;
 }
 
+/* drei Html portal containers (sibling divs of the canvas) must be transparent */
+canvas[data-engine] ~ div {
+  background: transparent !important;
+}
+canvas[data-engine] ~ div * {
+  background-color: transparent;
+}
+
 /* Suppress WebGL canvas selection highlight */
 canvas {
   -webkit-tap-highlight-color: transparent;
