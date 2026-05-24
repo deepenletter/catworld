@@ -181,17 +181,17 @@ function CountryMarker({
               ? 'rgba(245,197,24,0.25)'
               : isHovered
               ? 'rgba(245,197,24,0.18)'
-              : 'rgba(20,14,0,0.72)',
+              : 'transparent',
             border: isSelected
               ? '2px solid rgba(245,197,24,0.95)'
               : isHovered
               ? '1.5px solid rgba(245,197,24,0.8)'
-              : '1.5px solid rgba(245,197,24,0.55)',
+              : 'none',
             boxShadow: isSelected
               ? '0 0 10px rgba(245,197,24,0.8), 0 0 20px rgba(245,197,24,0.4)'
               : isHovered
               ? '0 0 8px rgba(245,197,24,0.6)'
-              : '0 0 6px rgba(245,197,24,0.3)',
+              : 'none',
             transition: 'all 0.15s ease',
             cursor: 'pointer',
           }}>
