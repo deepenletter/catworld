@@ -165,7 +165,7 @@ function CountryMarker({
         zIndexRange={[10, 100]}
       >
         <div
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto' }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto', background: 'transparent' }}
           onMouseEnter={() => onHover(country)}
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}

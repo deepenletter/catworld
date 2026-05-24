@@ -79,11 +79,12 @@ canvas[data-engine]:active {
   cursor: grabbing;
 }
 
-/* Kill any browser-injected outlines on drei Html wrapper divs */
+/* Kill any browser-injected outlines/backgrounds on drei Html wrapper divs */
 .drei-html-wrapper,
-.drei-html-wrapper * {
+.drei-html-wrapper > div {
   outline: none !important;
   box-shadow: none !important;
+  background: transparent !important;
 }
 
 /* Suppress WebGL canvas selection highlight */
