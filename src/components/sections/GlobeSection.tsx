@@ -123,7 +123,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
           <h2 className="mb-2 text-3xl font-display font-bold text-white drop-shadow-lg sm:text-4xl">
-            이번엔 어디로 떠날까요?
+            이번엔 어디로 떠날까냥?
           </h2>
           <p className="hidden text-sm text-white/45 md:block">
             지구본에서 나라를 직접 클릭하거나 아래 목록에서 선택해 주세요.
