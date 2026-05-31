@@ -131,75 +131,8 @@ function TwinklingStars() {
 }
 
 
-// ─── Walking cat sprite (billboard strolls around the globe) ─────────────────
+// ─── Cute 2D Cat Sprite (walks on globe rim with 4 legs) ─────────────────────
 
-function WalkingCat({ frameRef }: { frameRef: React.MutableRefObject<number> }) {
-  const textures = useTexture(['/cat-walk-1.png', '/cat-walk-2.png']);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const matRef = useRef<THREE.MeshBasicMaterial>(null);
-  const { camera } = useThree();
-
-  // texture setup + per-frame aspect ratios (w / h)
-  const aspects = useMemo(() => {
-    return textures.map((t) => {
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = 8;
-      t.minFilter = THREE.LinearMipmapLinearFilter;
-      t.magFilter = THREE.LinearFilter;
-      t.needsUpdate = true;
-      const img = t.image as { width: number; height: number } | undefined;
-      return img && img.height ? img.width / img.height : 0.6;
-    });
-  }, [textures]);
-  const baseAspect = aspects[0] ?? 0.6;
-
-  const HEIGHT = 0.5;   // world-space height of the cat
-  const LAT = 14;       // latitude of the walking ring (deg)
-  const SPEED = 0.16;   // angular speed around the globe (rad/s)
-  const STEP = 6;       // gait cadence (foot-falls per ~2π)
-  const dir = useMemo(() => new THREE.Vector3(), []);
-
-  useFrame(({ clock }) => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    const t = clock.elapsedTime;
-    const cur = frameRef.current;
-
-    // swap pose imperatively from a ref — no React re-render on scroll
-    if (matRef.current && matRef.current.map !== textures[cur]) {
-      matRef.current.map = textures[cur];
-      matRef.current.needsUpdate = true;
-    }
-
-    // unit-sphere point = surface normal; lift outward so the cat stands clear
-    // at the front and is occluded behind the globe.
-    const lng = ((t * SPEED * 180) / Math.PI) % 360 - 180;
-    dir.copy(latLngToVec3(LAT, lng, 1));
-
-    // gentle walking bob (no side-to-side rock, very subtle squash)
-    const bounce = Math.abs(Math.sin(t * STEP));
-    mesh.position.copy(dir).multiplyScalar(1 + HEIGHT * 0.44 + bounce * 0.02);
-
-    mesh.quaternion.copy(camera.quaternion);             // face the camera
-    const aspectScale = (aspects[cur] ?? baseAspect) / baseAspect;
-    const squashY = 0.985 + bounce * 0.015;
-    mesh.scale.set(aspectScale / squashY, squashY, 1);
-  });
-
-  return (
-    <mesh ref={meshRef} renderOrder={2} frustumCulled={false}>
-      <planeGeometry args={[HEIGHT * baseAspect, HEIGHT]} />
-      <meshBasicMaterial
-        ref={matRef}
-        map={textures[0]}
-        transparent
-        alphaTest={0.4}
-        depthWrite={false}
-        toneMapped={false}
-      />
-    </mesh>
-  );
-}
 
 // ─── Country marker ──────────────────────────────────────────────────────────
 
@@ -402,11 +335,10 @@ function GlobeGroup({
 // ─── Scene ────────────────────────────────────────────────────────────────────
 
 function Scene({
-  countries, pendingCountry, catFrameRef, controlsRef, onHover, onClick, onAnimationComplete,
+  countries, pendingCountry, controlsRef, onHover, onClick, onAnimationComplete,
 }: {
   countries: Country[];
   pendingCountry: Country | null;
-  catFrameRef: React.MutableRefObject<number>;
   controlsRef: React.RefObject<OrbitControlsImpl>;
   onHover: (c: Country | null) => void;
   onClick: (c: Country) => void;
@@ -426,13 +358,6 @@ function Scene({
         onHover={onHover}
         onClick={onClick}
       />
-
-      {/* Cat strolls around the globe; hidden during the zoom-in animation */}
-      {!pendingCountry && (
-        <Suspense fallback={null}>
-          <WalkingCat frameRef={catFrameRef} />
-        </Suspense>
-      )}
 
       <CameraAnimator target={pendingCountry} controlsRef={controlsRef} onComplete={onAnimationComplete} />
 
@@ -461,26 +386,7 @@ export function CatGlobe3D({
 }) {
   const [pendingCountry, setPendingCountry] = useState<Country | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<Country | null>(null);
-  const catFrameRef = useRef(0);
   const controlsRef = useRef<OrbitControlsImpl>(null);
-
-  // Toggle the cat's pose on scroll / touch-drag, throttled so it doesn't flicker.
-  // Uses a ref (not state) so scrolling never triggers a React re-render of the 3D tree.
-  useEffect(() => {
-    let last = 0;
-    const swap = () => {
-      const now = performance.now();
-      if (now - last < 320) return;
-      last = now;
-      catFrameRef.current = catFrameRef.current === 0 ? 1 : 0;
-    };
-    window.addEventListener('wheel', swap, { passive: true });
-    window.addEventListener('touchmove', swap, { passive: true });
-    return () => {
-      window.removeEventListener('wheel', swap);
-      window.removeEventListener('touchmove', swap);
-    };
-  }, []);
 
   const handleClick = useCallback((c: Country) => setPendingCountry(c), []);
   const handleAnimationComplete = useCallback(() => {
@@ -493,13 +399,12 @@ export function CatGlobe3D({
         camera={{ position: [0, 0.3, 2.9], fov: 50 }}
         gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
         style={{ background: 'transparent', touchAction: 'none' }}
-        dpr={[1, 1.25]}
+        dpr={[1, 1.5]}
         performance={{ min: 0.5 }}
       >
         <Scene
           countries={countries}
           pendingCountry={pendingCountry}
-          catFrameRef={catFrameRef}
           controlsRef={controlsRef}
           onHover={setHoveredCountry}
           onClick={handleClick}
