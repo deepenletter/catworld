@@ -85,6 +85,19 @@ canvas[data-engine]:active {
   outline: none !important;
   box-shadow: none !important;
   background: transparent !important;
+  border: none !important;
+}
+
+/* Remove the square tap-highlight box that iOS Safari / mobile browsers draw
+   around the clickable paw markers — leave only the transparent paw cutout.
+   (The round hover/selected ring lives on an inner <span> and is unaffected.) */
+.drei-html-wrapper,
+.drei-html-wrapper * {
+  -webkit-tap-highlight-color: transparent !important;
+}
+.drei-html-wrapper img {
+  border: none !important;
+  outline: none !important;
 }
 
 /* drei Html portal containers (sibling divs of the canvas) must be transparent */
