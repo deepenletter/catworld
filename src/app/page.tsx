@@ -34,6 +34,7 @@ export default function Home() {
         phase={state.phase}
         onLogoClick={actions.goHome}
         onGlobeClick={actions.goToGlobe}
+        onCountrySelect={actions.selectCountry}
       />
 
       <AnimatePresence mode="wait">

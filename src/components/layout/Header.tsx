@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
 import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import { countries } from '@/data/countries';
 import { extractCustomCountries, extractEnabledCountrySlugs } from '@/lib/adminConfig';
@@ -29,6 +29,7 @@ type Props = {
   phase: AppPhase;
   onLogoClick: () => void;
   onGlobeClick: () => void;
+  onCountrySelect: (country: Country) => void;
 };
 
 const NAV = [
@@ -37,11 +38,24 @@ const NAV = [
   { label: 'FAQ', href: '#faq' },
 ];
 
-export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
+export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [countryModalOpen, setCountryModalOpen] = useState(false);
+  const [travelingTo, setTravelingTo] = useState<Country | null>(null);
   const [activeCountries, setActiveCountries] = useState<Country[]>(countries);
   const isGlobeBg = phase === 'globe' || phase === 'generating';
+
+  // 나라 클릭 → "다른나라 간다냥..." 로딩 후 해당 나라 스타일 갤러리로 이동
+  useEffect(() => {
+    if (!travelingTo) return;
+    const t = setTimeout(() => {
+      onCountrySelect(travelingTo);
+      setCountryModalOpen(false);
+      setMenuOpen(false);
+      setTravelingTo(null);
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [travelingTo, onCountrySelect]);
 
   useEffect(() => {
     fetch('/api/admin/config', { cache: 'no-store' })
@@ -156,7 +170,7 @@ export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
         </AnimatePresence>
       </header>
 
-      {/* 세계나라냥 모달 */}
+      {/* 세계나라냥 — PC 우측 드로어 */}
       <AnimatePresence>
         {countryModalOpen && (
           <>
@@ -168,13 +182,13 @@ export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
               onClick={() => setCountryModalOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-sm mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed top-0 right-0 z-[70] flex h-full w-full max-w-sm flex-col bg-white shadow-2xl"
             >
-              {/* 모달 헤더 */}
+              {/* 드로어 헤더 */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-warm-100">
                 <div className="flex items-center gap-2">
                   <CatPawIcon size={18} tone="hovered" />
@@ -184,17 +198,22 @@ export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
                 <button
                   onClick={() => setCountryModalOpen(false)}
                   className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-warm-100 transition-colors text-warm-500"
+                  aria-label="닫기"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* 나라 목록 */}
-              <div className="max-h-80 overflow-y-auto py-2">
+              <p className="px-5 pt-3 pb-1 text-xs text-warm-400">나라를 선택하면 스타일 갤러리로 이동해요</p>
+
+              {/* 나라 목록 (클릭 시 해당 나라 스타일 갤러리로 이동) */}
+              <div className="flex-1 overflow-y-auto py-2">
                 {activeCountries.map((country) => (
-                  <div
+                  <button
                     key={country.slug}
-                    className="flex items-center gap-3 px-5 py-2.5 hover:bg-warm-50 transition-colors"
+                    onClick={() => setTravelingTo(country)}
+                    disabled={!!travelingTo}
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-warm-50 active:bg-warm-100 disabled:opacity-50"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -205,11 +224,63 @@ export function Header({ phase, onLogoClick, onGlobeClick }: Props) {
                       style={{ width: 28, height: 20, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }}
                     />
                     <span className="text-sm font-medium text-warm-800">{country.name}</span>
-                  </div>
+                    <ChevronRight className="ml-auto w-4 h-4 text-warm-300" />
+                  </button>
                 ))}
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* "다른나라 간다냥..." 이동 로딩 오버레이 */}
+      <AnimatePresence>
+        {travelingTo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-black/85 px-6 text-center backdrop-blur-md"
+          >
+            <div className="relative mb-8">
+              <motion.div
+                animate={{ scale: [1, 1.12, 1], rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="flex justify-center"
+              >
+                <CatPawIcon size={74} tone="selected" />
+              </motion.div>
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute left-1/2 top-1/2"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3 + i * 0.7, repeat: Infinity, ease: 'linear', delay: i * 0.4 }}
+                  style={{ originX: '50%', originY: '50%' }}
+                >
+                  <div
+                    className="absolute"
+                    style={{ transform: `translate(-50%, -50%) translateX(${56 + i * 18}px)`, opacity: 0.6 - i * 0.12 }}
+                  >
+                    <CatPawIcon size={16 - i * 2} tone={i === 0 ? 'hovered' : 'ambient'} />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <h2 className="font-display text-2xl font-bold text-white">다른나라 간다냥...</h2>
+            <div className="mt-3 flex items-center gap-2 text-sm text-white/70">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://flagcdn.com/w40/${travelingTo.code}.png`}
+                alt={travelingTo.name}
+                width={22}
+                height={16}
+                style={{ width: 22, height: 16, objectFit: 'cover', borderRadius: 3 }}
+              />
+              <span>{travelingTo.name} 스타일 갤러리로 이동 중</span>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

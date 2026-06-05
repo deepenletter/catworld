@@ -112,18 +112,21 @@ export function GlobeSection({ onCountrySelect }: Props) {
       </div>
 
       <div
-        className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-6 pb-6 pt-20 text-center"
-        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.78) 0%, transparent 100%)' }}
+        className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-6 pb-12 pt-20 text-center"
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.62) 48%, transparent 100%)' }}
       >
         <motion.div
           initial={{ opacity: 0, y: -14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h2 className="mb-2 text-3xl font-display font-bold text-white drop-shadow-lg sm:text-4xl">
+          <h2
+            className="mb-2 text-3xl font-display font-bold text-white sm:text-4xl"
+            style={{ textShadow: '0 2px 14px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.9)' }}
+          >
             어디로 떠날까냥?
           </h2>
-          <p className="text-sm text-white/45">
+          <p className="text-sm text-white/70" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}>
             원하는 나라를 선택하라옹
           </p>
         </motion.div>
