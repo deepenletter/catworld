@@ -95,7 +95,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
             Geometry tuned so the rendered sphere lands on center (832,546) r319
             within the 1672×941 stage — i.e. exactly where the cat is hugging it,
             so the globe rim tucks behind the paws instead of poking out above. */}
-        <div className="absolute" style={{ left: '26.3%', top: '14.7%', width: '46.9%', height: '86.6%' }}>
+        <div className="absolute" style={{ left: '26.3%', top: '16.5%', width: '46.9%', height: '83.1%' }}>
           <CatGlobe3D countries={activeCountries} onCountrySelect={onCountrySelect} />
         </div>
 
@@ -106,7 +106,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
           alt=""
           aria-hidden
           draggable={false}
-          style={{ zIndex: 5, transform: 'translateY(-4%)' }}
+          style={{ zIndex: 5, transform: 'translateY(-4%) scale(1.08)', transformOrigin: '50% 21%' }}
           className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
         />
       </div>
