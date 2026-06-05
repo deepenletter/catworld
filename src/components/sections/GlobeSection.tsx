@@ -23,16 +23,10 @@ function customToCountry(c: CustomCountryData) {
   };
 }
 
-const SPARKLES: [number, number, number, number][] = [
-  [4, 8, 2.1, 0], [12, 3, 1.7, 0.4], [19, 14, 2.4, 0.8], [28, 5, 1.9, 0.2], [36, 10, 2.6, 1.0],
-  [44, 2, 1.5, 0.6], [53, 8, 2.2, 0.1], [62, 4, 1.8, 0.9], [71, 12, 2.5, 0.3], [80, 6, 1.6, 0.7],
-  [88, 9, 2.3, 0.5], [93, 3, 1.9, 1.2], [7, 22, 2.0, 0.8], [16, 28, 2.7, 0.2], [24, 18, 1.6, 1.1],
-  [33, 24, 2.3, 0.4], [41, 30, 1.8, 0.9], [50, 19, 2.1, 0.0], [59, 26, 2.5, 0.6], [67, 21, 1.7, 1.3],
-  [76, 28, 2.4, 0.3], [85, 16, 2.0, 0.7], [91, 24, 1.5, 1.0], [3, 38, 2.2, 0.5], [48, 40, 1.9, 0.2],
-  [73, 35, 2.6, 0.8], [95, 42, 1.7, 0.1], [20, 50, 2.3, 1.4], [65, 48, 2.0, 0.6], [87, 55, 1.8, 0.3],
-  [10, 60, 2.5, 0.9], [38, 65, 1.6, 0.4], [56, 58, 2.2, 1.1], [78, 62, 1.9, 0.0], [92, 68, 2.4, 0.7],
-  [5, 75, 1.7, 0.3], [30, 80, 2.1, 0.8], [60, 78, 2.6, 0.2], [82, 82, 1.5, 1.2], [15, 88, 2.3, 0.5],
-];
+// Painted-globe geometry inside public/newcat.png (1672×941):
+//   center (832, 546)  radius 319  → the live 3D globe is aligned to sit on top of it.
+const STAGE_W = 1672;
+const STAGE_H = 941;
 
 const CatGlobe3D = dynamic(
   () => import('@/components/globe/CatGlobe3D').then((module) => module.CatGlobe3D),
@@ -76,41 +70,45 @@ export function GlobeSection({ onCountrySelect }: Props) {
   }, []);
 
   return (
-    <section
-      className="relative h-screen overflow-hidden"
-      style={{
-        background: '#060400',
-        backgroundImage: 'url(/catworldbg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <div className="absolute inset-0 z-0" style={{ background: 'rgba(4,3,0,0.52)' }} />
+    <section className="relative h-screen overflow-hidden" style={{ background: '#04060f' }}>
+      {/* Aspect-locked stage: keeps the photo, the live 3D globe, and the cat
+          overlay perfectly aligned no matter the screen size (acts like
+          background-size: cover, but for every layer at once). */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: `max(100vw, calc(100vh * ${STAGE_W} / ${STAGE_H}))`,
+          height: `max(100vh, calc(100vw * ${STAGE_H} / ${STAGE_W}))`,
+        }}
+      >
+        {/* Space + cat photo backdrop (the painted globe is hidden behind the 3D one) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/newcat.png"
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+        />
 
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        {SPARKLES.map(([x, y, duration, delay], index) => (
-          <div
-            key={index}
-            className="star-sparkle"
-            style={{
-              position: 'absolute',
-              left: `${x}%`,
-              top: `${y}%`,
-              width: 2 + (index % 3),
-              height: 2 + (index % 3),
-              borderRadius: '50%',
-              background: 'rgba(255,250,220,0.95)',
-              animationDuration: `${duration}s`,
-              animationDelay: `${delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="absolute inset-0 z-10">
-        <div className="h-full w-full">
+        {/* Live 3D rotating globe, sized/placed over the painted globe.
+            Geometry tuned so the rendered sphere lands on center (832,546) r319
+            within the 1672×941 stage — i.e. exactly where the cat is hugging it,
+            so the globe rim tucks behind the paws instead of poking out above. */}
+        <div className="absolute" style={{ left: '26.3%', top: '14.7%', width: '46.9%', height: '86.6%' }}>
           <CatGlobe3D countries={activeCountries} onCountrySelect={onCountrySelect} />
         </div>
+
+        {/* Cat (head + paws) hugging the globe, layered in front */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/cat-overlay.png"
+          alt=""
+          aria-hidden
+          draggable={false}
+          style={{ zIndex: 5, transform: 'translateY(-4%)' }}
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+        />
       </div>
 
       <div
