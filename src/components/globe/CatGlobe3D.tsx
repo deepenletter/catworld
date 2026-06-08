@@ -159,7 +159,7 @@ function CountryMarker({
       </mesh>
       <Html
         center
-        distanceFactor={4}
+        distanceFactor={9.2}
         className="drei-html-wrapper"
         style={{ background: 'none', border: 'none', outline: 'none', boxShadow: 'none', padding: 0, margin: 0, pointerEvents: 'none' }}
         zIndexRange={[10, 100]}
@@ -228,6 +228,42 @@ function CountryMarker({
       </Html>
     </group>
   );
+}
+
+// ─── Globe placement (full-screen canvas, globe sized/shifted to hug the cat) ──
+// The canvas now fills the whole stage so dragging works everywhere and the
+// zoom-to-country fills the screen. To keep the browse-mode globe at the same
+// modest size/position the cat overlay is drawn for (stage center 832,546,
+// radius ~306 of the 1672×941 stage), the camera sits far back (≈6.66) and a
+// downward view offset pushes the sphere to ~58% height. During a country zoom
+// the offset is cleared so the globe re-centres and fills the screen.
+const GLOBE_SHIFT_FRAC = 0.08; // push globe down 8% of canvas height
+
+function GlobeViewOffset({ active }: { active: boolean }) {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    if (active && size.height > 0) {
+      cam.setViewOffset(
+        size.width,
+        size.height,
+        0,
+        -size.height * GLOBE_SHIFT_FRAC,
+        size.width,
+        size.height,
+      );
+    } else {
+      cam.clearViewOffset();
+    }
+    cam.updateProjectionMatrix();
+    return () => {
+      cam.clearViewOffset();
+      cam.updateProjectionMatrix();
+    };
+  }, [active, camera, size.width, size.height]);
+
+  return null;
 }
 
 // ─── Camera animator ──────────────────────────────────────────────────────────
@@ -359,6 +395,8 @@ function Scene({
         onClick={onClick}
       />
 
+      <GlobeViewOffset active={!pendingCountry} />
+
       <CameraAnimator target={pendingCountry} controlsRef={controlsRef} onComplete={onAnimationComplete} />
 
       <OrbitControls
@@ -379,16 +417,20 @@ function Scene({
 // ─── Public export ────────────────────────────────────────────────────────────
 
 export function CatGlobe3D({
-  countries, onCountrySelect,
+  countries, onCountrySelect, onZoomStart,
 }: {
   countries: Country[];
   onCountrySelect: (country: Country) => void;
+  onZoomStart?: () => void;
 }) {
   const [pendingCountry, setPendingCountry] = useState<Country | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<Country | null>(null);
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
-  const handleClick = useCallback((c: Country) => setPendingCountry(c), []);
+  const handleClick = useCallback((c: Country) => {
+    onZoomStart?.();
+    setPendingCountry(c);
+  }, [onZoomStart]);
   const handleAnimationComplete = useCallback(() => {
     if (pendingCountry) setTimeout(() => onCountrySelect(pendingCountry), 120);
   }, [pendingCountry, onCountrySelect]);
@@ -396,7 +438,7 @@ export function CatGlobe3D({
   return (
     <div className="relative w-full h-full">
       <Canvas
-        camera={{ position: [0, 0.3, 2.9], fov: 50 }}
+        camera={{ position: [0, 0.4, 6.66], fov: 50 }}
         gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
         style={{ background: 'transparent', touchAction: 'none' }}
         dpr={[1, 1.5]}

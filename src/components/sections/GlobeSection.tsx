@@ -52,6 +52,7 @@ type Props = {
 
 export function GlobeSection({ onCountrySelect }: Props) {
   const [activeCountries, setActiveCountries] = useState<Country[]>(countries);
+  const [zooming, setZooming] = useState(false);
 
   useEffect(() => {
     fetch('/api/admin/config', { cache: 'no-store' })
@@ -91,28 +92,40 @@ export function GlobeSection({ onCountrySelect }: Props) {
           className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
         />
 
-        {/* Live 3D rotating globe, sized/placed over the painted globe.
-            Geometry tuned so the rendered sphere lands on center (832,546) r319
-            within the 1672×941 stage — i.e. exactly where the cat is hugging it,
-            so the globe rim tucks behind the paws instead of poking out above. */}
-        <div className="absolute" style={{ left: '26.3%', top: '16.5%', width: '46.9%', height: '83.1%' }}>
-          <CatGlobe3D countries={activeCountries} onCountrySelect={onCountrySelect} />
+        {/* Live 3D rotating globe — full-stage canvas so dragging works
+            everywhere and the country zoom fills the screen. The globe itself is
+            sized/placed (via camera distance + view offset in CatGlobe3D) to land
+            on the painted reference (stage center 832,546 r306), i.e. exactly
+            where the cat is hugging it. During a zoom the offset is cleared so the
+            globe re-centres full-screen. */}
+        <div className="absolute inset-0">
+          <CatGlobe3D
+            countries={activeCountries}
+            onCountrySelect={onCountrySelect}
+            onZoomStart={() => setZooming(true)}
+          />
         </div>
 
-        {/* Cat (head + paws) hugging the globe, layered in front */}
+        {/* Cat (head + paws) hugging the globe, layered in front; fades out on zoom */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/cat-overlay.png"
           alt=""
           aria-hidden
           draggable={false}
-          style={{ zIndex: 5, transform: 'translateY(-4%) scale(1.08)', transformOrigin: '50% 21%' }}
+          style={{
+            zIndex: 5,
+            transform: 'translateY(-4%) scale(1.08)',
+            transformOrigin: '50% 21%',
+            opacity: zooming ? 0 : 1,
+            transition: 'opacity 0.4s ease',
+          }}
           className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
         />
       </div>
 
       <div
-        className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-6 pb-12 pt-20 text-center"
+        className={`pointer-events-none absolute left-0 right-0 top-0 z-20 px-6 pb-12 pt-20 text-center transition-opacity duration-300 ${zooming ? 'opacity-0' : 'opacity-100'}`}
         style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.62) 48%, transparent 100%)' }}
       >
         <motion.div
@@ -133,7 +146,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
       </div>
 
       <div
-        className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-14 sm:px-6"
+        className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-14 sm:px-6 transition-opacity duration-300 ${zooming ? 'opacity-0' : 'opacity-100'}`}
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)' }}
       >
         <div className="md:hidden">
@@ -148,7 +161,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 onClick={() => onCountrySelect(country)}
-                className="flex h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/8 transition-all duration-200 hover:border-primary/60 hover:bg-white/12 active:scale-95"
+                className="pointer-events-auto flex h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/8 transition-all duration-200 hover:border-primary/60 hover:bg-white/12 active:scale-95"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -172,7 +185,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
               <button
                 key={country.slug}
                 onClick={() => onCountrySelect(country)}
-                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm text-white/70 transition-all duration-200 hover:border-primary/50 hover:bg-white/14 hover:text-white active:scale-95"
+                className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm text-white/70 transition-all duration-200 hover:border-primary/50 hover:bg-white/14 hover:text-white active:scale-95"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
