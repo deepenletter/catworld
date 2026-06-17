@@ -234,10 +234,11 @@ function CountryMarker({
 // The canvas now fills the whole stage so dragging works everywhere and the
 // zoom-to-country fills the screen. To keep the browse-mode globe at the same
 // modest size/position the cat overlay is drawn for (stage center 832,546,
-// radius ~306 of the 1672×941 stage), the camera sits far back (≈6.66) and a
-// downward view offset pushes the sphere to ~58% height. During a country zoom
-// the offset is cleared so the globe re-centres and fills the screen.
-const GLOBE_SHIFT_FRAC = 0.08; // push globe down 8% of canvas height
+// radius ~306 of the 1672×941 stage), the camera sits at z≈2.5 (closer = bigger
+// globe) and a downward view offset cradles the sphere in the cat's paws.
+// During a country zoom the offset is cleared so the globe re-centres and fills
+// the screen.
+const GLOBE_SHIFT_FRAC = 0.11; // push globe down 11% of canvas height
 
 function GlobeViewOffset({ active }: { active: boolean }) {
   const { camera, size } = useThree();
@@ -438,7 +439,7 @@ export function CatGlobe3D({
   return (
     <div className="relative w-full h-full">
       <Canvas
-        camera={{ position: [0, 0.4, 6.66], fov: 50 }}
+        camera={{ position: [0, 0.4, 2.5], fov: 50 }}
         gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
         style={{ background: 'transparent', touchAction: 'none' }}
         dpr={[1, 1.5]}
