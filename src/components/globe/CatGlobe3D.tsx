@@ -147,22 +147,48 @@ function CountryMarker({
 }) {
   const position = useMemo(() => latLngToVec3(country.lat, country.lng, 1.04), [country]);
 
+  // Hide markers that sit on the far (back) hemisphere of the globe so they
+  // don't bleed through the sphere. The Html overlay ignores 3D depth, so we
+  // gate visibility ourselves: a surface point P is on the visible cap when
+  // dot(normalize(P), normalize(camera)) > R/|camera| (the horizon threshold).
+  const groupRef = useRef<THREE.Group>(null);
+  const [onFront, setOnFront] = useState(true);
+  const frontRef = useRef(true);
+  const worldPos = useMemo(() => new THREE.Vector3(), []);
+  const { camera } = useThree();
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    groupRef.current.getWorldPosition(worldPos);
+    const camLen = camera.position.length();
+    if (camLen === 0) return;
+    const facing = worldPos.dot(camera.position) / (worldPos.length() * camLen);
+    // 1.04 (marker radius) / camera distance ≈ horizon; small margin hides the rim.
+    const next = facing > 0.32;
+    if (next !== frontRef.current) {
+      frontRef.current = next;
+      setOnFront(next);
+    }
+  });
+
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <mesh
+        visible={onFront}
         onPointerOver={(e) => { e.stopPropagation(); onHover(country); }}
         onPointerOut={() => onHover(null)}
         onClick={(e) => { e.stopPropagation(); onClick(country); }}
       >
-        <sphereGeometry args={[0.055, 8, 8]} />
+        <sphereGeometry args={[0.045, 8, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+      {onFront && (
       <Html
         center
-        distanceFactor={9.2}
+        distanceFactor={13}
         className="drei-html-wrapper"
         style={{ background: 'none', border: 'none', outline: 'none', boxShadow: 'none', padding: 0, margin: 0, pointerEvents: 'none' }}
-        zIndexRange={[10, 100]}
+        zIndexRange={[4, 1]}
       >
         <div
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto', background: 'transparent' }}
@@ -174,8 +200,8 @@ function CountryMarker({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: isSelected ? 42 : isHovered ? 38 : 34,
-            height: isSelected ? 42 : isHovered ? 38 : 34,
+            width: isSelected ? 30 : isHovered ? 26 : 22,
+            height: isSelected ? 30 : isHovered ? 26 : 22,
             borderRadius: '50%',
             background: isSelected
               ? 'rgba(245,197,24,0.25)'
@@ -196,7 +222,7 @@ function CountryMarker({
             cursor: 'pointer',
           }}>
             <CatPawIcon
-              size={isSelected ? 24 : isHovered ? 21 : 18}
+              size={isSelected ? 16 : isHovered ? 14 : 12}
               tone={isSelected ? 'selected' : isHovered ? 'hovered' : 'default'}
             />
           </span>
@@ -226,6 +252,7 @@ function CountryMarker({
           )}
         </div>
       </Html>
+      )}
     </group>
   );
 }
