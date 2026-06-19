@@ -118,14 +118,14 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
             {/* 세계나라냥 버튼 */}
             <button
               onClick={() => setCountryModalOpen(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-bold transition-all ${
                 isGlobeBg
-                  ? 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white border border-white/15'
-                  : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+                  ? 'border border-white/15 bg-white/10 text-white hover:bg-white/20'
+                  : 'border border-primary-700/30 bg-primary text-warm-900 shadow-sm hover:bg-primary-light'
               }`}
             >
-              <CatPawIcon size={13} tone="default" />
-              <span className="hidden sm:inline">세계나라냥</span>
+              <CatPawIcon size={15} className={isGlobeBg ? '' : 'brightness-0 opacity-75'} />
+              <span>세계나라냥</span>
             </button>
 
             <button

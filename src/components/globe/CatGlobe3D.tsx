@@ -185,7 +185,7 @@ function CountryMarker({
       {onFront && (
       <Html
         center
-        distanceFactor={13}
+        distanceFactor={7}
         className="drei-html-wrapper"
         style={{ background: 'none', border: 'none', outline: 'none', boxShadow: 'none', padding: 0, margin: 0, pointerEvents: 'none' }}
         zIndexRange={[4, 1]}
