@@ -234,7 +234,7 @@ function CountryMarker({
 // empirically z=3.0 → globe radius ≈42% of canvas height) and a downward view
 // offset cradles the sphere under the cat's paws (center ≈60% height). During a
 // country zoom the offset is cleared so the globe re-centres and fills the screen.
-const GLOBE_SHIFT_FRAC = 0.20; // push globe (and the cat hugging it) further down so the cat's head clears the header/title
+const GLOBE_SHIFT_FRAC = 0.14; // vertical placement: keeps the (now smaller) globe's top tucked under the cat's paws while the whole sphere stays on-screen
 
 function GlobeViewOffset({ active }: { active: boolean }) {
   const { camera, size } = useThree();
@@ -435,7 +435,7 @@ export function CatGlobe3D({
   return (
     <div className="relative w-full h-full">
       <Canvas
-        camera={{ position: [0, 0, 3.0], fov: 50 }}
+        camera={{ position: [0, 0, 3.5], fov: 50 }}
         gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
         style={{ background: 'transparent', touchAction: 'none' }}
         dpr={[1, 1.5]}
