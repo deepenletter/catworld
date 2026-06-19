@@ -185,71 +185,21 @@ function CountryMarker({
       {onFront && (
       <Html
         center
-        distanceFactor={7}
+        distanceFactor={2.6}
         className="drei-html-wrapper"
         style={{ background: 'none', border: 'none', outline: 'none', boxShadow: 'none', padding: 0, margin: 0, pointerEvents: 'none' }}
         zIndexRange={[4, 1]}
       >
         <div
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto', background: 'transparent' }}
+          style={{ pointerEvents: 'auto', cursor: 'pointer', lineHeight: 0 }}
           onMouseEnter={() => onHover(country)}
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
         >
-          <span style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: isSelected ? 30 : isHovered ? 26 : 22,
-            height: isSelected ? 30 : isHovered ? 26 : 22,
-            borderRadius: '50%',
-            background: isSelected
-              ? 'rgba(245,197,24,0.25)'
-              : isHovered
-              ? 'rgba(245,197,24,0.18)'
-              : 'transparent',
-            border: isSelected
-              ? '2px solid rgba(245,197,24,0.95)'
-              : isHovered
-              ? '1.5px solid rgba(245,197,24,0.8)'
-              : 'none',
-            boxShadow: isSelected
-              ? '0 0 10px rgba(245,197,24,0.8), 0 0 20px rgba(245,197,24,0.4)'
-              : isHovered
-              ? '0 0 8px rgba(245,197,24,0.6)'
-              : 'none',
-            transition: 'all 0.15s ease',
-            cursor: 'pointer',
-          }}>
-            <CatPawIcon
-              size={isSelected ? 16 : isHovered ? 14 : 12}
-              tone={isSelected ? 'selected' : isHovered ? 'hovered' : 'default'}
-            />
-          </span>
-          {(isHovered || isSelected) && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              background: 'rgba(0,0,0,0.82)',
-              color: '#fff',
-              fontSize: 11,
-              padding: '4px 8px',
-              borderRadius: 8,
-              border: '1px solid rgba(245,197,24,0.45)',
-              backdropFilter: 'none',
-              whiteSpace: 'nowrap',
-              marginTop: 2,
-            }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://flagcdn.com/w20/${country.code}.png`}
-                alt={country.name}
-                style={{ width: 16, height: 11, borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
-              />
-              {country.name}
-            </div>
-          )}
+          <CatPawIcon
+            size={isSelected ? 26 : isHovered ? 23 : 20}
+            className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] transition-transform duration-150"
+          />
         </div>
       </Html>
       )}
@@ -265,7 +215,7 @@ function CountryMarker({
 // empirically z=3.0 → globe radius ≈42% of canvas height) and a downward view
 // offset cradles the sphere under the cat's paws (center ≈60% height). During a
 // country zoom the offset is cleared so the globe re-centres and fills the screen.
-const GLOBE_SHIFT_FRAC = 0.12; // push globe down just enough that its top tucks under the cat's paws (hugging, no gap)
+const GLOBE_SHIFT_FRAC = 0.20; // push globe (and the cat hugging it) further down so the cat's head clears the header/title
 
 function GlobeViewOffset({ active }: { active: boolean }) {
   const { camera, size } = useThree();

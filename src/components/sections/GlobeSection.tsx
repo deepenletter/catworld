@@ -115,7 +115,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
           draggable={false}
           style={{
             zIndex: 5,
-            transform: 'translateY(-4%) scale(1.08)',
+            transform: 'translateY(4%) scale(1.08)',
             transformOrigin: '50% 21%',
             opacity: zooming ? 0 : 1,
             transition: 'opacity 0.4s ease',
