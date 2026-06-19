@@ -92,36 +92,46 @@ export function GlobeSection({ onCountrySelect }: Props) {
           className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
         />
 
-        {/* Live 3D rotating globe — full-stage canvas so dragging works
-            everywhere and the country zoom fills the screen. The globe itself is
-            sized/placed (via camera distance + view offset in CatGlobe3D) to land
-            on the painted reference (stage center 832,546 r306), i.e. exactly
-            where the cat is hugging it. During a zoom the offset is cleared so the
-            globe re-centres full-screen. */}
-        <div className="absolute inset-0">
-          <CatGlobe3D
-            countries={activeCountries}
-            onCountrySelect={onCountrySelect}
-            onZoomStart={() => setZooming(true)}
+        {/* Globe + the cat hugging it are wrapped together so they scale/shift
+            as one unit and never lose alignment. Shrunk (scale 0.83) and nudged
+            down (6%) so the whole sphere shows as a circle and the cat clears the
+            header/title. On a country zoom the wrapper resets to fill the screen. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: zooming ? 'translateY(0%) scale(1)' : 'translateY(6%) scale(0.83)',
+            transformOrigin: '50% 50%',
+            transition: 'transform 0.45s ease',
+          }}
+        >
+          {/* Live 3D rotating globe — full-stage canvas so dragging works
+              everywhere. Sized/placed via camera distance + view offset in
+              CatGlobe3D to land where the cat is hugging it. */}
+          <div className="absolute inset-0">
+            <CatGlobe3D
+              countries={activeCountries}
+              onCountrySelect={onCountrySelect}
+              onZoomStart={() => setZooming(true)}
+            />
+          </div>
+
+          {/* Cat (head + paws) hugging the globe, layered in front; fades out on zoom */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/cat-overlay.png"
+            alt=""
+            aria-hidden
+            draggable={false}
+            style={{
+              zIndex: 5,
+              transform: 'translateY(4%) scale(1.08)',
+              transformOrigin: '50% 21%',
+              opacity: zooming ? 0 : 1,
+              transition: 'opacity 0.4s ease',
+            }}
+            className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
           />
         </div>
-
-        {/* Cat (head + paws) hugging the globe, layered in front; fades out on zoom */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/cat-overlay.png"
-          alt=""
-          aria-hidden
-          draggable={false}
-          style={{
-            zIndex: 5,
-            transform: 'translateY(4%) scale(1.08)',
-            transformOrigin: '50% 21%',
-            opacity: zooming ? 0 : 1,
-            transition: 'opacity 0.4s ease',
-          }}
-          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-        />
       </div>
 
       <div

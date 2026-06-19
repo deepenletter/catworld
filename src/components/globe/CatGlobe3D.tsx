@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
@@ -196,10 +195,30 @@ function CountryMarker({
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
         >
-          <CatPawIcon
-            size={isSelected ? 26 : isHovered ? 23 : 20}
-            className="drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] transition-transform duration-150"
-          />
+          {/* Solid amber paw silhouette so it reads clearly on the bright globe
+              without any box/circle behind it. */}
+          <svg
+            width={isSelected ? 27 : isHovered ? 24 : 21}
+            height={isSelected ? 27 : isHovered ? 24 : 21}
+            viewBox="0 0 24 24"
+            style={{
+              display: 'block',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.85))',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <g
+              fill={isSelected || isHovered ? '#FFD24A' : '#F5C518'}
+              stroke="rgba(40,25,0,0.85)"
+              strokeWidth={1}
+            >
+              <ellipse cx="12" cy="15.5" rx="5.2" ry="4.3" />
+              <ellipse cx="5.6" cy="10" rx="2" ry="2.7" />
+              <ellipse cx="9.7" cy="6.8" rx="2.1" ry="2.9" />
+              <ellipse cx="14.3" cy="6.8" rx="2.1" ry="2.9" />
+              <ellipse cx="18.4" cy="10" rx="2" ry="2.7" />
+            </g>
+          </svg>
         </div>
       </Html>
       )}
