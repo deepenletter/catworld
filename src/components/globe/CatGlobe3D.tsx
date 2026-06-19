@@ -179,13 +179,13 @@ function CountryMarker({
         onPointerOut={() => onHover(null)}
         onClick={(e) => { e.stopPropagation(); onClick(country); }}
       >
-        <sphereGeometry args={[0.085, 12, 12]} />
+        <sphereGeometry args={[0.13, 12, 12]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
       {onFront && (
       <Html
         center
-        distanceFactor={3.6}
+        distanceFactor={4.5}
         className="drei-html-wrapper"
         style={{ background: 'none', border: 'none', outline: 'none', boxShadow: 'none', padding: 0, margin: 0, pointerEvents: 'none' }}
         zIndexRange={[4, 1]}
@@ -201,8 +201,8 @@ function CountryMarker({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: isSelected ? 34 : isHovered ? 30 : 26,
-            height: isSelected ? 34 : isHovered ? 30 : 26,
+            width: isSelected ? 40 : isHovered ? 36 : 32,
+            height: isSelected ? 40 : isHovered ? 36 : 32,
             borderRadius: '50%',
             background: isSelected
               ? 'rgba(245,197,24,0.25)'
@@ -223,7 +223,7 @@ function CountryMarker({
             cursor: 'pointer',
           }}>
             <CatPawIcon
-              size={isSelected ? 19 : isHovered ? 17 : 15}
+              size={isSelected ? 25 : isHovered ? 22 : 20}
               className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
             />
           </span>
