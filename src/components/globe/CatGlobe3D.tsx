@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
@@ -190,35 +191,65 @@ function CountryMarker({
         zIndexRange={[4, 1]}
       >
         <div
-          style={{ pointerEvents: 'auto', cursor: 'pointer', lineHeight: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto', background: 'transparent' }}
           onMouseEnter={() => onHover(country)}
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
         >
-          {/* Solid amber paw silhouette so it reads clearly on the bright globe
-              without any box/circle behind it. */}
-          <svg
-            width={isSelected ? 27 : isHovered ? 24 : 21}
-            height={isSelected ? 27 : isHovered ? 24 : 21}
-            viewBox="0 0 24 24"
-            style={{
-              display: 'block',
-              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.85))',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <g
-              fill={isSelected || isHovered ? '#FFD24A' : '#F5C518'}
-              stroke="rgba(40,25,0,0.85)"
-              strokeWidth={1}
-            >
-              <ellipse cx="12" cy="15.5" rx="5.2" ry="4.3" />
-              <ellipse cx="5.6" cy="10" rx="2" ry="2.7" />
-              <ellipse cx="9.7" cy="6.8" rx="2.1" ry="2.9" />
-              <ellipse cx="14.3" cy="6.8" rx="2.1" ry="2.9" />
-              <ellipse cx="18.4" cy="10" rx="2" ry="2.7" />
-            </g>
-          </svg>
+          {/* White paw marker; a ring/glow appears only on hover/select */}
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: isSelected ? 30 : isHovered ? 26 : 22,
+            height: isSelected ? 30 : isHovered ? 26 : 22,
+            borderRadius: '50%',
+            background: isSelected
+              ? 'rgba(245,197,24,0.25)'
+              : isHovered
+              ? 'rgba(245,197,24,0.18)'
+              : 'transparent',
+            border: isSelected
+              ? '2px solid rgba(245,197,24,0.95)'
+              : isHovered
+              ? '1.5px solid rgba(245,197,24,0.8)'
+              : 'none',
+            boxShadow: isSelected
+              ? '0 0 10px rgba(245,197,24,0.8), 0 0 20px rgba(245,197,24,0.4)'
+              : isHovered
+              ? '0 0 8px rgba(245,197,24,0.6)'
+              : 'none',
+            transition: 'all 0.15s ease',
+            cursor: 'pointer',
+          }}>
+            <CatPawIcon
+              size={isSelected ? 16 : isHovered ? 14 : 13}
+              className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+            />
+          </span>
+          {(isHovered || isSelected) && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              background: 'rgba(0,0,0,0.82)',
+              color: '#fff',
+              fontSize: 11,
+              padding: '4px 8px',
+              borderRadius: 8,
+              border: '1px solid rgba(245,197,24,0.45)',
+              whiteSpace: 'nowrap',
+              marginTop: 2,
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://flagcdn.com/w20/${country.code}.png`}
+                alt={country.name}
+                style={{ width: 16, height: 11, borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
+              />
+              {country.name}
+            </div>
+          )}
         </div>
       </Html>
       )}
