@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { CatPawIcon } from '@/components/ui/CatPawIcon';
+import { prepareUploadImage, UploadImageError } from '@/lib/uploadImage';
 import type { Country, DailyGenerationQuota, StyleCard } from '@/types';
 
 type Props = {
@@ -38,14 +39,29 @@ export function UploadSection({
   onChangeStyle,
 }: Props) {
   const [dragging, setDragging] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const limitReached = dailyQuotaApplies && !!dailyQuota && dailyQuota.remaining <= 0;
 
   const handleFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith('image/')) return;
-      const url = URL.createObjectURL(file);
-      onUpload(file, url);
+    async (file: File) => {
+      setUploadError(null);
+      setPreparing(true);
+      try {
+        // Downscale/re-encode in the browser so mobile photos never trip the
+        // serverless request-body limit (413) on generation.
+        const prepared = await prepareUploadImage(file);
+        onUpload(prepared, URL.createObjectURL(prepared));
+      } catch (err) {
+        setUploadError(
+          err instanceof UploadImageError
+            ? err.message
+            : '사진을 준비하는 중 문제가 생겼어요. 다른 사진으로 시도해 주세요.',
+        );
+      } finally {
+        setPreparing(false);
+      }
     },
     [onUpload],
   );
@@ -199,8 +215,20 @@ export function UploadSection({
           </div>
 
           <AnimatePresence>
+            {uploadError && (
+              <motion.p
+                key="upload-error"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-500 dark:border-red-800 dark:bg-red-900/20"
+              >
+                안내: {uploadError}
+              </motion.p>
+            )}
             {error && (
               <motion.p
+                key="server-error"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -215,8 +243,8 @@ export function UploadSection({
             <Button
               size="xl"
               onClick={onGenerate}
-              disabled={!uploadedImage || isGenerating || limitReached}
-              loading={isGenerating}
+              disabled={!uploadedImage || isGenerating || limitReached || preparing}
+              loading={isGenerating || preparing}
               className="w-full"
               icon={<CatPawIcon size={18} tone="selected" />}
             >

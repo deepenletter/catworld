@@ -228,12 +228,23 @@ export function useAppState() {
         const response = await fetch(generateUrl, { method: 'POST', body: form });
         clearInterval(timer);
 
+        // Platform-level errors (Vercel 413/403/504 pages) are not JSON, so
+        // read the body once as text and translate known statuses for users.
+        const rawBody = await response.text().catch(() => '');
         let data: GenerateApiResponse = {};
         try {
-          data = await response.json();
+          data = JSON.parse(rawBody) as GenerateApiResponse;
         } catch {
-          const text = await response.text().catch(() => '');
-          throw new Error(`서버 응답을 읽지 못했습니다. (${response.status}) ${text.slice(0, 120)}`);
+          if (response.status === 413) {
+            throw new Error('사진 용량이 너무 커서 서버가 받지 못했어요. 다른 사진으로 다시 시도해 주세요.');
+          }
+          if (response.status === 403) {
+            throw new Error('요청이 일시적으로 차단됐어요. 잠시 후 새로고침하고 다시 시도해 주세요.');
+          }
+          if (response.status === 504 || response.status === 524) {
+            throw new Error('생성 시간이 초과됐어요. 잠시 후 다시 시도해 주세요.');
+          }
+          throw new Error(`서버 응답을 읽지 못했습니다. (${response.status}) ${rawBody.slice(0, 120)}`);
         }
 
         setDailyQuota(data.quota ?? null);

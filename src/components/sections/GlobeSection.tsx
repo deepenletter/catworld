@@ -23,7 +23,7 @@ function customToCountry(c: CustomCountryData) {
   };
 }
 
-// Space backdrop public/space-bg.png is 1672×941; the stage is aspect-locked
+// Space backdrop public/space-bg.jpg is 1672×941; the stage is aspect-locked
 // to it so the photo and the live 3D globe stay aligned at any screen size.
 const STAGE_W = 1672;
 const STAGE_H = 941;
@@ -85,7 +85,7 @@ export function GlobeSection({ onCountrySelect }: Props) {
         {/* Space photo backdrop */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/space-bg.png"
+          src="/space-bg.jpg"
           alt=""
           aria-hidden
           draggable={false}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { memo, useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -135,7 +135,11 @@ function TwinklingStars() {
 
 // ─── Country marker ──────────────────────────────────────────────────────────
 
-function CountryMarker({
+// memo is load-bearing here: a hover state change must re-render only the
+// marker entering/leaving hover. Re-rendering every marker makes each drei
+// <Html> overlay re-flush before its next positioning frame, which briefly
+// paints all paw markers stacked/misplaced (the "ghost paws" flicker).
+const CountryMarker = memo(function CountryMarker({
   country, isHovered, isSelected, onHover, onClick,
 }: {
   country: Country;
@@ -190,7 +194,7 @@ function CountryMarker({
         zIndexRange={[4, 1]}
       >
         <div
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pointerEvents: 'auto', background: 'transparent' }}
+          style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', background: 'transparent' }}
           onMouseEnter={() => onHover(country)}
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
@@ -232,35 +236,40 @@ function CountryMarker({
               style={{ objectFit: 'contain', display: 'block' }}
             />
           </span>
-          {(isHovered || isSelected) && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              background: 'rgba(0,0,0,0.82)',
-              color: '#fff',
-              fontSize: 11,
-              padding: '4px 8px',
-              borderRadius: 8,
-              border: '1px solid rgba(245,197,24,0.45)',
-              whiteSpace: 'nowrap',
-              marginTop: 2,
-            }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://flagcdn.com/w20/${country.code}.png`}
-                alt={country.name}
-                style={{ width: 16, height: 11, borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
-              />
-              {country.name}
-            </div>
-          )}
+          {/* Tooltip stays mounted (visibility toggle) so hovering never
+              changes the Html children structure — mounting/unmounting nodes
+              inside drei Html triggers a one-frame reflow flicker. */}
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 3px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            background: 'rgba(0,0,0,0.82)',
+            color: '#fff',
+            fontSize: 11,
+            padding: '4px 8px',
+            borderRadius: 8,
+            border: '1px solid rgba(245,197,24,0.45)',
+            whiteSpace: 'nowrap',
+            visibility: isHovered || isSelected ? 'visible' : 'hidden',
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://flagcdn.com/w20/${country.code}.png`}
+              alt={country.name}
+              style={{ width: 16, height: 11, borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
+            />
+            {country.name}
+          </div>
         </div>
       </Html>
       )}
     </group>
   );
-}
+});
 
 // ─── Camera animator ──────────────────────────────────────────────────────────
 
@@ -323,7 +332,9 @@ function CameraAnimator({
 
 // ─── Rotating globe group ─────────────────────────────────────────────────────
 
-function GlobeGroup({
+// Memoized for the same reason as CountryMarker: the hover hint text lives in
+// CatGlobe3D state, and its updates must not re-render the marker tree.
+const GlobeGroup = memo(function GlobeGroup({
   countries, pendingCountry, onHover, onClick,
 }: {
   countries: Country[];
@@ -362,7 +373,7 @@ function GlobeGroup({
       ))}
     </group>
   );
-}
+});
 
 // ─── Scene ────────────────────────────────────────────────────────────────────
 
