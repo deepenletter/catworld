@@ -23,8 +23,8 @@ function customToCountry(c: CustomCountryData) {
   };
 }
 
-// Painted-globe geometry inside public/newcat.png (1672×941):
-//   center (832, 546)  radius 319  → the live 3D globe is aligned to sit on top of it.
+// Space backdrop public/space-bg.png is 1672×941; the stage is aspect-locked
+// to it so the photo and the live 3D globe stay aligned at any screen size.
 const STAGE_W = 1672;
 const STAGE_H = 941;
 
@@ -72,9 +72,9 @@ export function GlobeSection({ onCountrySelect }: Props) {
 
   return (
     <section className="relative h-screen overflow-hidden" style={{ background: '#04060f' }}>
-      {/* Aspect-locked stage: keeps the photo, the live 3D globe, and the cat
-          overlay perfectly aligned no matter the screen size (acts like
-          background-size: cover, but for every layer at once). */}
+      {/* Aspect-locked stage: keeps the photo and the live 3D globe perfectly
+          aligned no matter the screen size (acts like background-size: cover,
+          but for every layer at once). */}
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
@@ -82,10 +82,10 @@ export function GlobeSection({ onCountrySelect }: Props) {
           height: `max(100vh, calc(100vw * ${STAGE_H} / ${STAGE_W}))`,
         }}
       >
-        {/* Space + cat photo backdrop (the painted globe is hidden behind the 3D one) */}
+        {/* Space photo backdrop */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/newcat.png"
+          src="/space-bg.png"
           alt=""
           aria-hidden
           draggable={false}
@@ -93,9 +93,8 @@ export function GlobeSection({ onCountrySelect }: Props) {
         />
 
         {/* Live 3D rotating globe — full-stage canvas so dragging works
-            everywhere. The globe is sized (camera distance) + placed (view offset)
-            in CatGlobe3D to tuck under the cat's paws. Camera projection keeps it
-            horizontally centred, so the cat (also centred) always lines up. */}
+            everywhere. The globe is sized (camera distance) in CatGlobe3D and
+            stays centred in the stage. */}
         <div className="absolute inset-0">
           <CatGlobe3D
             countries={activeCountries}
@@ -103,24 +102,6 @@ export function GlobeSection({ onCountrySelect }: Props) {
             onZoomStart={() => setZooming(true)}
           />
         </div>
-
-        {/* Cat (head + paws) hugging the globe, layered in front; fades out on zoom.
-            Scaled to match the globe size, pivoting near the paw/hug line (21%). */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/cat-overlay.png"
-          alt=""
-          aria-hidden
-          draggable={false}
-          style={{
-            zIndex: 5,
-            transform: 'translateY(4%) scale(0.91)',
-            transformOrigin: '50% 21%',
-            opacity: zooming ? 0 : 1,
-            transition: 'opacity 0.4s ease',
-          }}
-          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
-        />
       </div>
 
       <div

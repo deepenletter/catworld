@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useMemo, useCallback, Suspense } from 'rea
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import { CatPawIcon } from '@/components/ui/CatPawIcon';
 import type { Country } from '@/types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
@@ -196,7 +195,7 @@ function CountryMarker({
           onMouseLeave={() => onHover(null)}
           onClick={(e) => { e.stopPropagation(); onClick(country); }}
         >
-          {/* White paw marker; a ring/glow appears only on hover/select */}
+          {/* Glowing paw marker; a ring appears only on hover/select */}
           <span style={{
             display: 'flex',
             alignItems: 'center',
@@ -222,9 +221,15 @@ function CountryMarker({
             transition: 'all 0.15s ease',
             cursor: 'pointer',
           }}>
-            <CatPawIcon
-              size={isSelected ? 25 : isHovered ? 22 : 20}
-              className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/paw-marker.png"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              width={isSelected ? 34 : isHovered ? 30 : 26}
+              height={isSelected ? 34 : isHovered ? 30 : 26}
+              style={{ objectFit: 'contain', display: 'block' }}
             />
           </span>
           {(isHovered || isSelected) && (
@@ -255,43 +260,6 @@ function CountryMarker({
       )}
     </group>
   );
-}
-
-// ─── Globe placement (full-screen canvas, globe sized/shifted to hug the cat) ──
-// The canvas now fills the whole stage so dragging works everywhere and the
-// zoom-to-country fills the screen. To place the browse-mode globe where the
-// cat overlay's head+paws hug it (stage center ~832,546), the camera sits at
-// z≈3.0 (closer = bigger globe;
-// empirically z=3.0 → globe radius ≈42% of canvas height) and a downward view
-// offset cradles the sphere under the cat's paws (center ≈60% height). During a
-// country zoom the offset is cleared so the globe re-centres and fills the screen.
-const GLOBE_SHIFT_FRAC = 0.14; // vertical placement: keeps the (now smaller) globe's top tucked under the cat's paws while the whole sphere stays on-screen
-
-function GlobeViewOffset({ active }: { active: boolean }) {
-  const { camera, size } = useThree();
-
-  useEffect(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    if (active && size.height > 0) {
-      cam.setViewOffset(
-        size.width,
-        size.height,
-        0,
-        -size.height * GLOBE_SHIFT_FRAC,
-        size.width,
-        size.height,
-      );
-    } else {
-      cam.clearViewOffset();
-    }
-    cam.updateProjectionMatrix();
-    return () => {
-      cam.clearViewOffset();
-      cam.updateProjectionMatrix();
-    };
-  }, [active, camera, size.width, size.height]);
-
-  return null;
 }
 
 // ─── Camera animator ──────────────────────────────────────────────────────────
@@ -422,8 +390,6 @@ function Scene({
         onHover={onHover}
         onClick={onClick}
       />
-
-      <GlobeViewOffset active={!pendingCountry} />
 
       <CameraAnimator target={pendingCountry} controlsRef={controlsRef} onComplete={onAnimationComplete} />
 
