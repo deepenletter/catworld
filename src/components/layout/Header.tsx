@@ -115,7 +115,7 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* 세계나라냥 버튼 */}
+            {/* 공항갈까냥 버튼 */}
             <button
               onClick={() => setCountryModalOpen(true)}
               className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-bold transition-all ${
@@ -125,7 +125,7 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
               }`}
             >
               <CatPawIcon size={15} className={isGlobeBg ? '' : 'brightness-0 opacity-75'} />
-              <span>세계나라냥</span>
+              <span>공항갈까냥</span>
             </button>
 
             <button
@@ -170,7 +170,7 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
         </AnimatePresence>
       </header>
 
-      {/* 세계나라냥 — PC 우측 드로어 */}
+      {/* 공항갈까냥 — PC 우측 드로어 */}
       <AnimatePresence>
         {countryModalOpen && (
           <>
@@ -192,7 +192,7 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
               <div className="flex items-center justify-between px-5 py-4 border-b border-warm-100">
                 <div className="flex items-center gap-2">
                   <CatPawIcon size={18} tone="hovered" />
-                  <span className="font-display font-bold text-warm-900">세계나라냥</span>
+                  <span className="font-display font-bold text-warm-900">공항갈까냥</span>
                   <span className="text-xs text-warm-400 ml-1">{activeCountries.length}개 나라</span>
                 </div>
                 <button
