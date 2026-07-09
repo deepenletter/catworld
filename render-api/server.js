@@ -4,8 +4,74 @@ const cors = require('cors');
 const multer = require('multer');
 const { toFile } = require('openai');
 const OpenAI = require('openai').default ?? require('openai');
+const { list, put } = require('@vercel/blob');
 
 const app = express();
+
+// ─── 전역 일일 예산 상한 (Vercel Blob 공유 카운터) ────────────────────────────
+// Next의 src/lib/dailyBudget.ts와 같은 저장 경로/키를 사용해 두 배포가 카운터를 공유한다.
+// BLOB_READ_WRITE_TOKEN이 없거나 오류면 fail-open(생성을 막지 않음).
+const BUDGET_PREFIX = 'catworld-budget';
+const DEFAULT_DAILY_BUDGET_LIMIT = 60;
+const DEFAULT_BUDGET_TIMEZONE = 'Asia/Seoul';
+
+function getBudgetLimit() {
+  const raw = Number(process.env.DAILY_BUDGET_LIMIT || DEFAULT_DAILY_BUDGET_LIMIT);
+  if (!Number.isFinite(raw)) return DEFAULT_DAILY_BUDGET_LIMIT;
+  return Math.max(1, Math.floor(raw));
+}
+
+function getBudgetDayKey() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: process.env.DAILY_LIMIT_TIMEZONE || DEFAULT_BUDGET_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function budgetPathFor(day) {
+  return `${BUDGET_PREFIX}/${day}.json`;
+}
+
+async function readBudgetCount(day, token) {
+  const { blobs } = await list({ prefix: budgetPathFor(day), limit: 1, token });
+  if (!blobs.length) return 0;
+  const res = await fetch(`${blobs[0].url}?_=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) return 0;
+  const data = await res.json().catch(() => null);
+  return data && typeof data.count === 'number' ? data.count : 0;
+}
+
+async function isDailyBudgetExceeded() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return false; // 저장소 미설정 → 상한 비활성(fail-open)
+  try {
+    const day = getBudgetDayKey();
+    return (await readBudgetCount(day, token)) >= getBudgetLimit();
+  } catch {
+    return false; // fail-open
+  }
+}
+
+async function incrementDailyBudget() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return;
+  try {
+    const day = getBudgetDayKey();
+    const current = await readBudgetCount(day, token);
+    await put(budgetPathFor(day), JSON.stringify({ day, count: current + 1 }), {
+      access: 'public',
+      contentType: 'application/json',
+      token,
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 0,
+    });
+  } catch {
+    // fail-open
+  }
+}
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 const imageModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2';
 const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'high';
@@ -130,6 +196,12 @@ app.post('/generate', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'file is required.' });
   }
 
+  if (await isDailyBudgetExceeded()) {
+    return res.status(429).json({
+      error: '오늘 준비된 무료 체험 인원이 모두 찼어요. 내일 다시 만나요! 🐾',
+    });
+  }
+
   try {
     const openai = new OpenAI({ apiKey });
     const mimeType = file.mimetype || 'image/jpeg';
@@ -190,6 +262,8 @@ app.post('/generate', upload.single('file'), async (req, res) => {
 
     const b64 = response.data?.[0]?.b64_json;
     if (!b64) throw new Error('No edited image was returned from OpenAI.');
+
+    await incrementDailyBudget();
 
     return res.json({ resultUrl: `data:${getOutputMimeType()};base64,${b64}` });
   } catch (error) {

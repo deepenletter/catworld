@@ -2,6 +2,7 @@ import OpenAI, { toFile } from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminRequest } from '@/lib/adminSession';
 import { applyDailyQuotaCookie, consumeDailyQuota, getDailyQuota } from '@/lib/dailyQuota';
+import { getDailyBudget, incrementDailyBudget } from '@/lib/dailyBudget';
 import { buildFaceSwapPrompt } from '@/lib/faceSwap';
 
 export const maxDuration = 300;
@@ -124,6 +125,20 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
+    // 전역 일일 예산 상한 — 하루 총 생성 수가 한도에 도달하면 마감 (관리자는 예외).
+    if (!quotaBypassed) {
+      const budget = await getDailyBudget();
+      if (budget.exceeded) {
+        return NextResponse.json(
+          {
+            error: '오늘 준비된 무료 체험 인원이 모두 찼어요. 내일 다시 만나요! 🐾',
+            quota,
+          },
+          { status: 429, headers: { 'Cache-Control': 'no-store' } },
+        );
+      }
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const prompt = formData.get('prompt') as string | null;
@@ -202,6 +217,9 @@ export async function POST(req: NextRequest) {
     }
 
     const nextQuota = quotaBypassed ? null : consumeDailyQuota(req);
+    if (!quotaBypassed) {
+      await incrementDailyBudget();
+    }
     const usage = (
       response as {
         usage?: { input_tokens?: number; output_tokens?: number; total_tokens?: number };
