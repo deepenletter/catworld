@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
         <div className="pointer-events-none fixed bottom-3 right-3 z-[60] rounded-full border border-white/12 bg-black/45 px-3 py-1 text-[11px] font-medium tracking-[0.02em] text-white/72 backdrop-blur-md">
           Copyright · kingdomtool7@gmail.com
         </div>
+        <Analytics />
       </body>
     </html>
   );
