@@ -74,7 +74,7 @@ async function incrementDailyBudget() {
 }
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 const imageModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2';
-const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'high';
+const imageQuality = process.env.OPENAI_IMAGE_QUALITY || 'medium';
 const outputFormat = process.env.OPENAI_IMAGE_OUTPUT_FORMAT || 'jpeg';
 const outputCompression = outputFormat === 'png'
   ? undefined
