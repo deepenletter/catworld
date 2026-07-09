@@ -17,6 +17,20 @@ const imageQuality = (
 ) as 'low' | 'medium' | 'high' | 'auto';
 const outputFormat = (process.env.OPENAI_IMAGE_OUTPUT_FORMAT ?? 'jpeg') as 'png' | 'jpeg' | 'webp';
 
+// OpenAI 결제 한도/크레딧 소진 등 "서비스가 잠시 닫힌" 류의 에러인지 판별.
+// 이런 경우 사용자에겐 무서운 "오류" 대신 친절한 "마감" 문구를 보여준다.
+function isServiceClosedError(error: unknown): boolean {
+  const e = error as { code?: string; type?: string; message?: string } | null;
+  if (!e) return false;
+  const haystack = `${e.code ?? ''} ${e.type ?? ''} ${e.message ?? ''}`.toLowerCase();
+  return (
+    haystack.includes('billing') ||
+    haystack.includes('insufficient_quota') ||
+    haystack.includes('hard limit') ||
+    haystack.includes('exceeded your current quota')
+  );
+}
+
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -265,6 +279,15 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     // 내부 예외 상세는 로그로만. 사용자에겐 일반 문구.
     console.error('[generate]', error instanceof Error ? error.message : String(error));
+
+    // OpenAI 결제 한도/크레딧 소진 → 무서운 오류 대신 친절한 마감 안내.
+    if (isServiceClosedError(error)) {
+      return NextResponse.json(
+        { error: '오늘 준비된 무료 체험이 모두 소진됐어요. 내일 다시 만나요! 🐾' },
+        { status: 429 },
+      );
+    }
+
     return NextResponse.json(
       { error: 'AI 고양이 편집 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.' },
       { status: 500 },

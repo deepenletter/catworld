@@ -123,6 +123,18 @@ function isAllowedRemoteImageUrl(rawUrl) {
   return EXTRA_ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
 }
 
+// OpenAI 결제 한도/크레딧 소진 등 "서비스가 잠시 닫힌" 류 에러 판별.
+function isServiceClosedError(error) {
+  if (!error) return false;
+  const haystack = `${error.code || ''} ${error.type || ''} ${error.message || ''}`.toLowerCase();
+  return (
+    haystack.includes('billing') ||
+    haystack.includes('insufficient_quota') ||
+    haystack.includes('hard limit') ||
+    haystack.includes('exceeded your current quota')
+  );
+}
+
 function getExtensionFromMimeType(mimeType) {
   return mimeType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
 }
@@ -313,6 +325,9 @@ app.post('/generate', upload.single('file'), async (req, res) => {
     return res.json({ resultUrl: `data:${getOutputMimeType()};base64,${b64}` });
   } catch (error) {
     console.error('[generate]', error instanceof Error ? error.message : String(error));
+    if (isServiceClosedError(error)) {
+      return res.status(429).json({ error: '오늘 준비된 무료 체험이 모두 소진됐어요. 내일 다시 만나요! 🐾' });
+    }
     return res.status(500).json({ error: 'AI 고양이 편집 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.' });
   }
 });
