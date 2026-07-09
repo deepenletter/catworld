@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { isAllowedRemoteImageUrl } from '@/lib/security';
 
 type SharedPageProps = {
   searchParams: {
@@ -14,13 +15,18 @@ function sanitizeText(value: string | undefined, fallback: string) {
   return value.slice(0, 160);
 }
 
+// 신뢰 도메인(내 Blob)의 이미지만 노출 — 임의 URL 콘텐츠 스푸핑/피싱 차단.
+function safeImage(value: string | undefined): string | undefined {
+  return isAllowedRemoteImageUrl(value) ? value : undefined;
+}
+
 export function generateMetadata({ searchParams }: SharedPageProps): Metadata {
   const title = sanitizeText(searchParams.title, '세계냥주 공유 결과');
   const description = sanitizeText(
     searchParams.description,
     '세계냥주에서 만든 고양이 변신 결과를 확인해 보세요.',
   );
-  const image = searchParams.image;
+  const image = safeImage(searchParams.image);
 
   return {
     title,
@@ -45,7 +51,7 @@ export default function SharedPage({ searchParams }: SharedPageProps) {
     searchParams.description,
     '세계냥주에서 만든 고양이 변신 결과입니다.',
   );
-  const image = searchParams.image;
+  const image = safeImage(searchParams.image);
 
   return (
     <main className="min-h-screen bg-[#fff8e8] px-4 py-12 text-[#392314]">

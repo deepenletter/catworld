@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAdminRequest } from '@/lib/adminSession';
 import { applyDailyQuotaCookie, consumeDailyQuota, getDailyQuota } from '@/lib/dailyQuota';
 import { getDailyBudget, incrementDailyBudget } from '@/lib/dailyBudget';
+import { getClientIp, isAllowedRemoteImageUrl } from '@/lib/security';
+import { rateLimit } from '@/lib/rateLimit';
 import { buildFaceSwapPrompt } from '@/lib/faceSwap';
 
 export const maxDuration = 300;
@@ -125,6 +127,18 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
+    // IP 레이트리밋 — 쿠키 삭제로 일일 할당량을 무한 우회하는 남용을 1차 차단 (관리자 예외).
+    if (!quotaBypassed) {
+      const ip = getClientIp(req.headers);
+      const rl = rateLimit(`generate:${ip}`, 20, 60 * 60_000);
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: '요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.', quota },
+          { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+        );
+      }
+    }
+
     // 전역 일일 예산 상한 — 하루 총 생성 수가 한도에 도달하면 마감 (관리자는 예외).
     if (!quotaBypassed) {
       const budget = await getDailyBudget();
@@ -153,6 +167,11 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'file is required.' }, { status: 400 });
+    }
+
+    // SSRF 방어: 서버가 대신 fetch 할 templateUrl은 신뢰 도메인(내 Blob)만 허용.
+    if (templateUrl && !isAllowedRemoteImageUrl(templateUrl)) {
+      return NextResponse.json({ error: 'Invalid template URL.' }, { status: 400 });
     }
 
     const userImageBuffer = Buffer.from(await file.arrayBuffer());
@@ -244,8 +263,11 @@ export async function POST(req: NextRequest) {
 
     return json;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[generate]', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    // 내부 예외 상세는 로그로만. 사용자에겐 일반 문구.
+    console.error('[generate]', error instanceof Error ? error.message : String(error));
+    return NextResponse.json(
+      { error: 'AI 고양이 편집 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.' },
+      { status: 500 },
+    );
   }
 }

@@ -1,5 +1,6 @@
 import { put } from '@vercel/blob';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { isAdminRequest } from '@/lib/adminSession';
 import { parseImageDimensions } from '@/lib/imageDimensions';
 import {
   buildTemplateAspectRatioError,
@@ -9,8 +10,8 @@ import {
 
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
-  if (req.headers.get('x-admin-pw') !== process.env.ADMIN_PASSWORD) {
+export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

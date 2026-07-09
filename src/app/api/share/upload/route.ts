@@ -1,5 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { getClientIp } from '@/lib/security';
+import { rateLimit } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 
@@ -21,6 +23,16 @@ function getOrigin(req: Request) {
 }
 
 export async function POST(req: Request) {
+  // 스토리지 남용 방지: IP당 1시간에 20회까지.
+  const ip = getClientIp(req.headers);
+  const rl = rateLimit(`share-upload:${ip}`, 20, 60 * 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: '요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    );
+  }
+
   try {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
     if (!blobToken) {
@@ -67,8 +79,8 @@ export async function POST(req: Request) {
       shareUrl: shareUrl.toString(),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[share upload]', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    // 내부 예외 메시지는 로그로만 남기고 사용자에겐 일반 문구만 노출.
+    console.error('[share upload]', error instanceof Error ? error.message : String(error));
+    return NextResponse.json({ error: '공유 이미지를 저장하지 못했어요.' }, { status: 500 });
   }
 }

@@ -545,7 +545,6 @@ export default function AdminPage() {
 
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
-        headers: { 'x-admin-pw': password },
         body: form,
       });
       const data = await response.json();
@@ -625,7 +624,6 @@ export default function AdminPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-pw': password,
         },
         body: JSON.stringify(payload),
       });

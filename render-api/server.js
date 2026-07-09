@@ -80,7 +80,48 @@ const outputCompression = outputFormat === 'png'
   ? undefined
   : Math.max(0, Math.min(100, Number(process.env.OPENAI_IMAGE_OUTPUT_COMPRESSION || 82)));
 
-app.use(cors());
+// CORS: ALLOWED_ORIGINS(콤마 구분)가 설정되면 그 도메인만 허용. 미설정 시 개방(기존 동작)
+// 하되 경고를 남긴다. 프로덕션에선 반드시 네 사이트 도메인으로 설정할 것.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+  console.warn('[cors] ALLOWED_ORIGINS 미설정 — 모든 도메인 허용 중. 프로덕션에선 설정을 권장합니다.');
+  app.use(cors());
+} else {
+  app.use(
+    cors({
+      origin(origin, callback) {
+        // 서버-서버 요청(origin 없음) 또는 허용 목록에 있으면 통과.
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+      },
+    }),
+  );
+}
+
+// SSRF 방어: 서버가 대신 fetch 할 URL은 신뢰 도메인만 허용.
+const ALLOWED_URL_SUFFIXES = ['.public.blob.vercel-storage.com'];
+const EXTRA_ALLOWED_HOSTS = (process.env.ALLOWED_IMAGE_HOSTS || '')
+  .split(',')
+  .map((h) => h.trim().toLowerCase())
+  .filter(Boolean);
+
+function isAllowedRemoteImageUrl(rawUrl) {
+  if (typeof rawUrl !== 'string' || !rawUrl) return false;
+  let url;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:') return false;
+  const host = url.hostname.toLowerCase();
+  if (ALLOWED_URL_SUFFIXES.some((suffix) => host.endsWith(suffix))) return true;
+  return EXTRA_ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+}
 
 function getExtensionFromMimeType(mimeType) {
   return mimeType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
@@ -196,6 +237,10 @@ app.post('/generate', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'file is required.' });
   }
 
+  if (templateUrl && !isAllowedRemoteImageUrl(templateUrl)) {
+    return res.status(400).json({ error: 'Invalid template URL.' });
+  }
+
   if (await isDailyBudgetExceeded()) {
     return res.status(429).json({
       error: '오늘 준비된 무료 체험 인원이 모두 찼어요. 내일 다시 만나요! 🐾',
@@ -267,9 +312,8 @@ app.post('/generate', upload.single('file'), async (req, res) => {
 
     return res.json({ resultUrl: `data:${getOutputMimeType()};base64,${b64}` });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[generate]', message);
-    return res.status(500).json({ error: message });
+    console.error('[generate]', error instanceof Error ? error.message : String(error));
+    return res.status(500).json({ error: 'AI 고양이 편집 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.' });
   }
 });
 
