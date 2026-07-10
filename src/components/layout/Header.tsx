@@ -36,6 +36,10 @@ const NAV = [
   { label: '나라 선택', href: '#globe' },
   { label: '스타일 갤러리', href: '#gallery' },
   { label: 'FAQ', href: '#faq' },
+  {
+    label: '집사 이야기',
+    href: 'https://maddening-laugh-c23.notion.site/1e434d04ef1c8080af86e7413b9b2a4f',
+  },
 ];
 
 export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Props) {
@@ -101,6 +105,8 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
               <a
                 key={item.label}
                 href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                 onClick={item.href === '#globe' ? (e) => { e.preventDefault(); onGlobeClick(); } : undefined}
                 className={`text-sm font-medium transition-colors ${
                   isGlobeBg
@@ -155,6 +161,8 @@ export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Pr
                   <a
                     key={item.label}
                     href={item.href}
+                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     onClick={() => {
                       setMenuOpen(false);
                       if (item.href === '#globe') onGlobeClick();

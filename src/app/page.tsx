@@ -11,6 +11,7 @@ import { UploadSection } from '@/components/sections/UploadSection';
 import { ResultSection } from '@/components/sections/ResultSection';
 import { GallerySection } from '@/components/sections/GallerySection';
 import { FAQSection } from '@/components/sections/FAQSection';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { LoadingState } from '@/components/ui/LoadingState';
 
 const pageVariants = {
@@ -129,6 +130,8 @@ export default function Home() {
           <FAQSection />
         </>
       )}
+
+      {(state.phase === 'landing' || state.phase === 'result') && <SiteFooter />}
     </>
   );
 }
