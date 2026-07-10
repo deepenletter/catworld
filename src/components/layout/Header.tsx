@@ -36,10 +36,7 @@ const NAV = [
   { label: '나라 선택', href: '#globe' },
   { label: '스타일 갤러리', href: '#gallery' },
   { label: 'FAQ', href: '#faq' },
-  {
-    label: '집사 이야기',
-    href: 'https://maddening-laugh-c23.notion.site/1e434d04ef1c8080af86e7413b9b2a4f',
-  },
+  { label: '집사 이야기', href: '/story' },
 ];
 
 export function Header({ phase, onLogoClick, onGlobeClick, onCountrySelect }: Props) {

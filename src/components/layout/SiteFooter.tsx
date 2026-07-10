@@ -2,13 +2,12 @@
 
 import { CatPawIcon } from '@/components/ui/CatPawIcon';
 
-// 집사(운영자) 소개 노션 페이지.
-const STORY_URL =
-  'https://maddening-laugh-c23.notion.site/1e434d04ef1c8080af86e7413b9b2a4f';
+// 사이트 내 스토리 랜딩 페이지 (노션 일기는 그 안에서 링크).
+const STORY_URL = '/story';
 
 // 츄르값(후원) 링크 — 토스 송금 링크가 생기면 여기만 교체하면 된다.
-// 지금은 노션 페이지(계좌/후원 안내 포함 예정)로 연결.
-const CHURU_URL = STORY_URL;
+const CHURU_URL =
+  'https://maddening-laugh-c23.notion.site/1e434d04ef1c8080af86e7413b9b2a4f';
 
 export function SiteFooter() {
   return (
@@ -25,11 +24,9 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-center justify-center gap-2">
           <a
             href={STORY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className="rounded-full border border-warm-300 bg-white px-4 py-2 text-sm font-semibold text-warm-700 transition-colors hover:bg-warm-50 dark:border-warm-700 dark:bg-warm-800 dark:text-warm-200 dark:hover:bg-warm-700"
           >
-            🐾 13냥 집사 이야기
+            🐾 이 사이트가 만들어진 이유
           </a>
           <a
             href={CHURU_URL}
@@ -42,7 +39,7 @@ export function SiteFooter() {
         </div>
 
         <p className="text-xs text-warm-400 dark:text-warm-500">
-          보내주신 츄르값은 길냥이들 사료와 서버비에 소중하게 쓰여요.
+          츄르값은 개발자가 감사히 받아요. (13냥과 동네 길냥이들 집사입니다 🐾)
         </p>
       </div>
     </footer>
