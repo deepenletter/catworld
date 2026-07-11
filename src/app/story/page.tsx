@@ -52,7 +52,6 @@ const FAMILY: FamilyCat[] = [
   },
   {
     before: '/story/aeteut-before.jpg',
-    before2: '/story/aeteut-street2.jpg',
     after: '/story/aeteut.jpg',
     names: '애틋',
     story:
