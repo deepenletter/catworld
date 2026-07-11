@@ -37,6 +37,8 @@ type FamilyCat = {
   names: string;
   story: string;
   before?: string;
+  // 길 위 시절 사진이 두 장인 경우 (3장 나란히 레이아웃).
+  before2?: string;
   after?: string;
 };
 
@@ -50,6 +52,7 @@ const FAMILY: FamilyCat[] = [
   },
   {
     before: '/story/aeteut-before.jpg',
+    before2: '/story/aeteut-street2.jpg',
     after: '/story/aeteut.jpg',
     names: '애틋',
     story:
@@ -179,7 +182,11 @@ export default function StoryPage() {
                   className="overflow-hidden rounded-3xl border border-warm-200 bg-white shadow-sm dark:border-warm-800 dark:bg-warm-900"
                 >
                   {hasPair ? (
-                    <div className="grid grid-cols-2 gap-0.5 bg-warm-200 dark:bg-warm-800">
+                    <div
+                      className={`grid gap-0.5 bg-warm-200 dark:bg-warm-800 ${
+                        cat.before2 ? 'grid-cols-3' : 'grid-cols-2'
+                      }`}
+                    >
                       <div className="relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -192,6 +199,17 @@ export default function StoryPage() {
                           길 위에서
                         </span>
                       </div>
+                      {cat.before2 && (
+                        <div className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={cat.before2}
+                            alt={`${cat.names} — 길 위에서 2`}
+                            loading="lazy"
+                            className="aspect-square w-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
