@@ -27,7 +27,9 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [state.phase]);
 
-  const showStaticSections = state.phase === 'result';
+  // 갤러리·FAQ는 첫 화면과 결과 화면에서 노출 — 헤더의 #gallery/#faq 앵커가
+  // 랜딩에서도 동작해야 하고, 실제 공유 결과 갤러리는 첫 방문자에게 보여줄 가치가 크다.
+  const showStaticSections = state.phase === 'landing' || state.phase === 'result';
 
   return (
     <>
