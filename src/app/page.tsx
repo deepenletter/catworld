@@ -27,9 +27,11 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [state.phase]);
 
-  // 갤러리·FAQ는 첫 화면과 결과 화면에서 노출 — 헤더의 #gallery/#faq 앵커가
-  // 랜딩에서도 동작해야 하고, 실제 공유 결과 갤러리는 첫 방문자에게 보여줄 가치가 크다.
-  const showStaticSections = state.phase === 'landing' || state.phase === 'result';
+  // 갤러리·FAQ·푸터는 시작 화면(globe가 실제 초기 phase)과 랜딩·결과 화면에서 노출.
+  // 헤더의 #gallery/#faq 앵커가 첫 화면에서 동작해야 하고, 공유 갤러리는
+  // 첫 방문자에게 보여줄 가치가 크다. 생성 중/선택 중 화면은 집중을 위해 제외.
+  const showStaticSections =
+    state.phase === 'landing' || state.phase === 'globe' || state.phase === 'result';
 
   return (
     <>
@@ -133,7 +135,7 @@ export default function Home() {
         </>
       )}
 
-      {(state.phase === 'landing' || state.phase === 'result') && <SiteFooter />}
+      {showStaticSections && <SiteFooter />}
     </>
   );
 }
