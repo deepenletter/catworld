@@ -43,6 +43,7 @@ type FamilyCat = {
 const FAMILY: FamilyCat[] = [
   {
     before: '/story/boknun-family.jpg',
+    after: '/story/boknun-family-now.jpg',
     names: '복눈 · 솜눈 · 꽃눈 · 첫눈',
     story:
       '"길에 눈이 아픈 아기 고양이들이 있어요." 그 한 마디에 달려가 만난 사형제. 눈이 짓무른 채 서로에게 기대어 있던 아기들은, 이제 우리 집 대장 라인이 되었어요. (대장은 복눈이에요)',
@@ -70,9 +71,10 @@ const FAMILY: FamilyCat[] = [
   },
   {
     before: '/story/yangsun.jpg',
+    after: '/story/yangsun-now.jpg',
     names: '양순',
     story:
-      '스무 살 할머니 고양이. 밥자리에서 쫓겨나고 돌을 맞으면서도 버티던 아이를 더는 두고 볼 수 없었어요. 이제 따뜻한 집에서 여생을 보내는 중이에요.',
+      '스무 살 할머니 고양이. 밥자리에서 쫓겨나고 돌을 맞으면서도 버티던 아이를 더는 두고 볼 수 없었어요. 이제 따뜻한 방석 위에서 여생을 보내는 중 — 혀 빼꼼은 여전해요.',
   },
   {
     after: '/story/jyujyu.jpg',
