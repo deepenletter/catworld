@@ -1,0 +1,5 @@
+story-photo
+*.png
+*.jpg
+!public/**
+render-api
