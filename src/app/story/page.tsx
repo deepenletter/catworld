@@ -13,6 +13,11 @@ export const metadata: Metadata = {
     title: '이 사이트가 만들어진 이유',
     description: '길냥이 13마리와 함께 사는 한 사람의 이야기.',
     type: 'article',
+    images: [{ url: 'https://catworld-pi.vercel.app/story/hanchi-sechi.jpg' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['https://catworld-pi.vercel.app/story/hanchi-sechi.jpg'],
   },
 };
 
@@ -181,8 +186,31 @@ export default function StoryPage() {
           </p>
         </section>
 
+        {/* 노션 일기 카드 */}
+        <a
+          href={NOTION_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group mt-12 block overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md dark:from-warm-900 dark:to-warm-800 dark:border-primary/30 sm:p-7"
+        >
+          <div className="flex items-center gap-4">
+            <span className="text-4xl">📔</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-lg font-bold text-warm-900 dark:text-warm-50">
+                13냥이들의 일상 일기
+              </p>
+              <p className="mt-0.5 text-sm text-warm-600 dark:text-warm-300">
+                오늘도 뒹굴거리는 아이들의 사진과 근황, 노션에서 계속 기록 중이에요.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-warm-900 shadow-sm transition-colors group-hover:bg-primary-light">
+              구경가기 →
+            </span>
+          </div>
+        </a>
+
         {/* CTA */}
-        <div className="mt-14 flex flex-col items-center gap-3">
+        <div className="mt-8 flex flex-col items-center gap-3">
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-warm-900 shadow-sm transition-colors hover:bg-primary-light"
@@ -190,14 +218,6 @@ export default function StoryPage() {
             <CatPawIcon size={16} tone="selected" />
             우리 냥이 세계여행 보내주러 가기
           </Link>
-          <a
-            href={NOTION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-warm-500 underline-offset-4 transition-colors hover:text-primary hover:underline dark:text-warm-400"
-          >
-            13냥이들의 일상 구경하기 (노션) →
-          </a>
         </div>
       </article>
     </main>
