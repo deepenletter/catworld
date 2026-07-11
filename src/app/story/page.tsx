@@ -190,12 +190,12 @@ export default function StoryPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={cat.before}
-                          alt={`${cat.names} — 길 위에서`}
+                          alt={`${cat.names} — 구조전`}
                           loading="lazy"
                           className="aspect-square w-full object-cover"
                         />
                         <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
-                          길 위에서
+                          구조전
                         </span>
                       </div>
                       {cat.before2 && (
@@ -203,7 +203,7 @@ export default function StoryPage() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={cat.before2}
-                            alt={`${cat.names} — 길 위에서 2`}
+                            alt={`${cat.names} — 구조전 2`}
                             loading="lazy"
                             className="aspect-square w-full object-cover"
                           />
@@ -213,12 +213,12 @@ export default function StoryPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={cat.after}
-                          alt={`${cat.names} — 지금은`}
+                          alt={`${cat.names} — 구조후`}
                           loading="lazy"
                           className="aspect-square w-full object-cover"
                         />
                         <span className="absolute left-2 top-2 rounded-full bg-primary/90 px-2.5 py-1 text-[11px] font-bold text-warm-900 backdrop-blur-sm">
-                          지금은 🏠
+                          구조후 🏠
                         </span>
                       </div>
                     </div>
