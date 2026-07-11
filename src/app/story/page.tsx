@@ -32,51 +32,63 @@ function PawDivider() {
 }
 
 // 13냥 가족 소개 — 구조 이야기와 함께.
-const FAMILY: { photo: string; names: string; story: string }[] = [
+// before(길 위에서) / after(지금은) 둘 다 있으면 비포·애프터로, 하나면 단독 사진으로 렌더.
+type FamilyCat = {
+  names: string;
+  story: string;
+  before?: string;
+  after?: string;
+};
+
+const FAMILY: FamilyCat[] = [
   {
-    photo: '/story/boknun-family.jpg',
+    before: '/story/boknun-family.jpg',
     names: '복눈 · 솜눈 · 꽃눈 · 첫눈',
     story:
       '"길에 눈이 아픈 아기 고양이들이 있어요." 그 한 마디에 달려가 만난 사형제. 눈이 짓무른 채 서로에게 기대어 있던 아기들은, 이제 우리 집 대장 라인이 되었어요. (대장은 복눈이에요)',
   },
   {
-    photo: '/story/aeteut.jpg',
+    before: '/story/aeteut-before.jpg',
+    after: '/story/aeteut.jpg',
     names: '애틋',
     story:
       '같은 밥자리 친구 체셔와 함께 온 아이. 체셔는 먼저 별이 되었지만, 애틋이 곁엔 그 몫까지의 사랑이 남아 있어요.',
   },
   {
-    photo: '/story/hanchi-sechi.jpg',
+    before: '/story/hanchi-sechi-before.jpg',
+    after: '/story/hanchi-sechi.jpg',
     names: '한치 · 세치',
     story:
       '안양천 다리 아래 살던 형제. 다리가 그물로 막힌다는 소식에 서둘러 데려왔어요. 아픈 발을 고치고도 아직 손은 안 타는 새침이들 — 주둥이에 카레 묻은 쪽이 세치예요.',
   },
   {
-    photo: '/story/pinko.jpg',
+    before: '/story/pinko-before.jpg',
+    after: '/story/pinko.jpg',
     names: '핑코',
     story:
-      '머리를 크게 다친 채 발견된 아이. 입양 보내려 했는데 너무 개냥이라 그대로 눌러앉았어요. 지금은 사료 모델 경력까지 있는, 돈도 벌어오는 효자냥이에요.',
+      '머리를 크게 다친 채 발견된 아이. 수술 자국이 아물 때까지 넥카라를 쓰고 버텼어요. 입양 보내려 했는데 너무 개냥이라 그대로 눌러앉았고, 지금은 사료 모델 경력까지 있는 효자냥이에요.',
   },
   {
-    photo: '/story/yangsun.jpg',
+    before: '/story/yangsun.jpg',
     names: '양순',
     story:
       '스무 살 할머니 고양이. 밥자리에서 쫓겨나고 돌을 맞으면서도 버티던 아이를 더는 두고 볼 수 없었어요. 이제 따뜻한 집에서 여생을 보내는 중이에요.',
   },
   {
-    photo: '/story/jyujyu.jpg',
+    after: '/story/jyujyu.jpg',
     names: '쥬쥬',
     story:
       '양순 할매 밥자리에 나타난 초개냥이. 할매랑 같이, 둘 다 데려왔어요.',
   },
   {
-    photo: '/story/aeganjang-aebiang.jpg',
+    before: '/story/aeganjang-before.jpg',
+    after: '/story/aeganjang-aebiang.jpg',
     names: '애간장 · 애비앙',
     story:
       '삼형제 중 둘. 애간장은 피눈물 흘리던 눈을 수술로 잃었지만 누구보다 씩씩하고, 애비앙은 집 앞까지 졸졸 따라오던 개냥이예요. 막내는 좋은 집으로 입양 갔어요.',
   },
   {
-    photo: '/story/nuri.jpg',
+    after: '/story/nuri.jpg',
     names: '누리',
     story:
       '모르는 사람 무릎에도 앉던 개냥이… 였는데, 집에 오니 새침해졌어요. 그래도 사랑해.',
@@ -156,28 +168,61 @@ export default function StoryPage() {
           </p>
 
           <div className="space-y-8">
-            {FAMILY.map((cat) => (
-              <figure
-                key={cat.names}
-                className="overflow-hidden rounded-3xl border border-warm-200 bg-white shadow-sm dark:border-warm-800 dark:bg-warm-900"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cat.photo}
-                  alt={cat.names}
-                  loading="lazy"
-                  className="max-h-[420px] w-full object-cover"
-                />
-                <figcaption className="px-5 py-4">
-                  <p className="mb-1 font-display text-lg font-bold text-warm-900 dark:text-warm-50">
-                    {cat.names}
-                  </p>
-                  <p className="text-sm leading-relaxed text-warm-600 dark:text-warm-300">
-                    {cat.story}
-                  </p>
-                </figcaption>
-              </figure>
-            ))}
+            {FAMILY.map((cat) => {
+              const hasPair = !!cat.before && !!cat.after;
+              const single = cat.before ?? cat.after;
+              return (
+                <figure
+                  key={cat.names}
+                  className="overflow-hidden rounded-3xl border border-warm-200 bg-white shadow-sm dark:border-warm-800 dark:bg-warm-900"
+                >
+                  {hasPair ? (
+                    <div className="grid grid-cols-2 gap-0.5 bg-warm-200 dark:bg-warm-800">
+                      <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={cat.before}
+                          alt={`${cat.names} — 길 위에서`}
+                          loading="lazy"
+                          className="aspect-square w-full object-cover"
+                        />
+                        <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                          길 위에서
+                        </span>
+                      </div>
+                      <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={cat.after}
+                          alt={`${cat.names} — 지금은`}
+                          loading="lazy"
+                          className="aspect-square w-full object-cover"
+                        />
+                        <span className="absolute left-2 top-2 rounded-full bg-primary/90 px-2.5 py-1 text-[11px] font-bold text-warm-900 backdrop-blur-sm">
+                          지금은 🏠
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={single}
+                      alt={cat.names}
+                      loading="lazy"
+                      className="max-h-[420px] w-full object-cover"
+                    />
+                  )}
+                  <figcaption className="px-5 py-4">
+                    <p className="mb-1 font-display text-lg font-bold text-warm-900 dark:text-warm-50">
+                      {cat.names}
+                    </p>
+                    <p className="text-sm leading-relaxed text-warm-600 dark:text-warm-300">
+                      {cat.story}
+                    </p>
+                  </figcaption>
+                </figure>
+              );
+            })}
           </div>
 
           <p className="mt-8 text-center text-sm leading-relaxed text-warm-500 dark:text-warm-400">
