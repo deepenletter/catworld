@@ -7,19 +7,24 @@ import { CatPawIcon } from '@/components/ui/CatPawIcon';
 type GalleryItem = { url: string; uploadedAt: string };
 
 // 유저들이 공유한 실제 AI 생성 결과 (shared-results Blob)를 보여주는 갤러리.
+// 섹션은 항상 렌더된다 — 로딩/빈/실패 상태를 그대로 보여줘야 #gallery 앵커가
+// 언제나 동작하고, 문제가 생겨도 "조용히 사라지는" 미스터리가 없다.
 export function GallerySection() {
   const [items, setItems] = useState<GalleryItem[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    fetch('/api/gallery')
-      .then((r) => r.json())
+    fetch('/api/gallery', { cache: 'no-store' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data: { items?: GalleryItem[] }) => setItems(data.items ?? []))
-      .catch(() => setItems([]));
+      .catch(() => {
+        setFailed(true);
+        setItems([]);
+      });
   }, []);
-
-  // 로딩 중이거나 아직 공유된 결과가 없으면 섹션 자체를 숨긴다 —
-  // 빈 갤러리를 보여주는 것보다 깔끔하다.
-  if (!items || items.length === 0) return null;
 
   return (
     <section id="gallery" className="py-20 px-4 sm:px-6 bg-white dark:bg-warm-900">
@@ -33,8 +38,37 @@ export function GallerySection() {
           </p>
         </div>
 
+        {/* 로딩 스켈레톤 */}
+        {items === null && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[3/4] animate-pulse rounded-2xl bg-warm-100 dark:bg-warm-800"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* 빈/실패 상태 */}
+        {items !== null && items.length === 0 && (
+          <div className="rounded-3xl border-2 border-dashed border-warm-200 py-16 text-center dark:border-warm-700">
+            <div className="mb-3 text-4xl">📸</div>
+            <p className="font-medium text-warm-600 dark:text-warm-300">
+              {failed
+                ? '갤러리를 불러오지 못했어요. 잠시 후 새로고침해 주세요.'
+                : '아직 공유된 여행 사진이 없어요.'}
+            </p>
+            {!failed && (
+              <p className="mt-1 text-sm text-warm-400 dark:text-warm-500">
+                첫 번째로 우리 냥이의 여행 사진을 전시해 보세요!
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {items.map((item, i) => (
+          {(items ?? []).map((item, i) => (
             <motion.div
               key={item.url}
               initial={{ opacity: 0, y: 20 }}
