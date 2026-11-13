@@ -233,6 +233,9 @@ function parseDataUrl(dataUrl) {
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
+// 2026-11-13 운영 종료: 로그인 없이 유료 AI 호출이 가능해 비용이 새는 걸 막으려고 닫음. 되살리려면 이 블록을 지운다.
+app.post('/generate', (_req, res) => res.status(410).json({ error: '운영 종료된 서비스입니다.' }));
+
 app.post('/generate', upload.single('file'), async (req, res) => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
